@@ -2,8 +2,66 @@ import axios from 'axios';
 import * as cheerio from 'cheerio';
 
 /**
- * Universal Website Scraper & Business Intelligence OSINT for ANY Company worldwide.
- * Parses HTML structure (headings, schema.org, meta, lists) for 100% custom extraction.
+ * Auxiliary Function: Scrapes an individual internal subpage & extracts clean products, services, text.
+ */
+async function scrapeSubPage(url) {
+  try {
+    const res = await axios.get(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept-Language': 'es-ES,es;q=0.9,en;q=0.8'
+      },
+      timeout: 5000
+    });
+
+    if (!res.data) return null;
+    const $ = cheerio.load(res.data);
+    $('script, style, noscript, iframe, footer, nav, header, .cookie, .banner, .popup').remove();
+
+    const title = $('title').text().trim();
+    const description = $('meta[name="description"]').attr('content') || '';
+    const pageText = $('body').text().replace(/\s+/g, ' ').trim();
+    
+    const products = [];
+    const services = [];
+
+    // Extract products and services from subpage headings & lists
+    $('h1, h2, h3, li, .product, .service, .item, article, strong').each((i, el) => {
+      const txt = $(el).text().replace(/Desplazarse hacia arriba|ir arriba|scroll to top|todos los derechos reservados|inicio|home|contacto|nosotros/gi, '').trim();
+      const tLower = txt.toLowerCase();
+      if (txt.length > 5 && txt.length < 90 && !txt.includes('\n')) {
+        if (tLower.includes('dobladora') || tLower.includes('curvado') || tLower.includes('caño') || tLower.includes('tubo') || tLower.includes('fabricación') || tLower.includes('pieza') || tLower.includes('equipo') || tLower.includes('maquinaria') || tLower.includes('insumo') || tLower.includes('matricería') || tLower.includes('perfil') || tLower.includes('bomba') || tLower.includes('frio') || tLower.includes('refrigeración') || tLower.includes('software') || tLower.includes('plataforma') || tLower.includes('válvula') || tLower.includes('neumátic') || tLower.includes('sensor')) {
+          if (!tLower.includes('servicio')) products.push(txt);
+        } else if (tLower.includes('servicio') || tLower.includes('doblado') || tLower.includes('mantenimiento') || tLower.includes('mecanizado') || tLower.includes('reparación') || tLower.includes('plegado') || tLower.includes('corte') || tLower.includes('instalación') || tLower.includes('asesoría') || tLower.includes('desarrollo')) {
+          services.push(txt);
+        }
+      }
+    });
+
+    const paragraphs = [];
+    $('p').each((i, el) => {
+      const pTxt = $(el).text().trim();
+      if (pTxt.length > 40 && !pTxt.includes('cookie') && !pTxt.includes('copyright') && !pTxt.includes('javascript') && !pTxt.includes('derechos reservados')) {
+        paragraphs.push(pTxt);
+      }
+    });
+
+    return {
+      title,
+      description,
+      pageText: pageText.slice(0, 2000),
+      products,
+      services,
+      paragraphs
+    };
+  } catch (e) {
+    return null;
+  }
+}
+
+/**
+ * Universal Multi-Page & Subdirectory Website Scraper for ANY Company.
+ * Parses Main Landing Page + Key Internal Subdirectories (Products, About, Services, Categories).
  */
 export async function scrapeCompanyWebsite(websiteUrl, companyName) {
   const cleanComp = companyName ? companyName.trim() : 'Empresa';
@@ -15,6 +73,13 @@ export async function scrapeCompanyWebsite(websiteUrl, companyName) {
   let formattedUrl = websiteUrl.trim();
   if (!/^https?:\/\//i.test(formattedUrl)) {
     formattedUrl = `https://${formattedUrl}`;
+  }
+
+  let targetHost = '';
+  try {
+    targetHost = new URL(formattedUrl).hostname.replace(/^www\./i, '').toLowerCase();
+  } catch (e) {
+    targetHost = formattedUrl;
   }
 
   const profile = {
@@ -38,6 +103,8 @@ export async function scrapeCompanyWebsite(websiteUrl, companyName) {
     rawText: ''
   };
 
+  const discoveredSubpageUrls = new Set();
+
   try {
     const response = await axios.get(formattedUrl, {
       headers: {
@@ -52,7 +119,25 @@ export async function scrapeCompanyWebsite(websiteUrl, companyName) {
       profile.title = $('title').text().trim() || cleanComp;
       profile.description = $('meta[name="description"]').attr('content') || $('meta[property="og:description"]').attr('content') || '';
 
-      // Clean HTML noise (script, style, nav, footer, cookie banners)
+      // Discover internal subdirectory URLs on the SAME domain
+      $('a[href]').each((i, el) => {
+        const href = $(el).attr('href');
+        if (!href || href.startsWith('#') || href.startsWith('javascript:') || href.startsWith('mailto:') || href.startsWith('tel:')) return;
+        try {
+          const fullUrl = new URL(href, formattedUrl);
+          const linkHost = fullUrl.hostname.replace(/^www\./i, '').toLowerCase();
+          if (linkHost === targetHost) {
+            const pathLower = fullUrl.pathname.toLowerCase();
+            if (/nosotros|quienes|empresa|about|producto|servicio|catalogo|categoria|solucion|proyecto|obra|contacto|certificac|item/i.test(pathLower)) {
+              if (fullUrl.href !== formattedUrl) {
+                discoveredSubpageUrls.add(fullUrl.href);
+              }
+            }
+          }
+        } catch (e) {}
+      });
+
+      // Clean HTML noise
       $('script, style, noscript, iframe, footer, nav, header, .cookie, .banner, .popup').remove();
 
       const pageText = $('body').text().replace(/\s+/g, ' ').trim();
@@ -67,7 +152,7 @@ export async function scrapeCompanyWebsite(websiteUrl, companyName) {
         const cleaned = phrase.replace(/Desplazarse hacia arriba|ir arriba|scroll to top|todos los derechos reservados|inicio|home|contacto|nosotros/gi, '').trim();
         const pLower = cleaned.toLowerCase();
         if (cleaned.length > 4 && cleaned.length < 80) {
-          if (pLower.includes('dobladora') || pLower.includes('curvador') || pLower.includes('maquina') || pLower.includes('matriceria') || pLower.includes('repuesto') || pLower.includes('fabricación') || pLower.includes('pieza') || pLower.includes('equipo') || pLower.includes('caño') || pLower.includes('tubo') || pLower.includes('sensor') || pLower.includes('bomba') || pLower.includes('frio') || pLower.includes('refrigeración') || pLower.includes('sistema') || pLower.includes('software')) {
+          if (pLower.includes('dobladora') || pLower.includes('curvador') || pLower.includes('maquina') || pLower.includes('matriceria') || pLower.includes('repuesto') || pLower.includes('fabricación') || pLower.includes('pieza') || pLower.includes('equipo') || pLower.includes('caño') || pLower.includes('tubo') || pLower.includes('sensor') || pLower.includes('bomba') || pLower.includes('frio') || pLower.includes('refrigeración') || pLower.includes('sistema') || pLower.includes('software') || pLower.includes('válvula') || pLower.includes('neumátic')) {
             if (!profile.products.includes(cleaned) && !pLower.includes('servicio de')) profile.products.push(cleaned);
           }
           if (pLower.includes('servicio de') || pLower.includes('doblado') || pLower.includes('curvado') || pLower.includes('mecanizado') || pLower.includes('mantenimiento') || pLower.includes('corte') || pLower.includes('plegado') || pLower.includes('instalación') || pLower.includes('desarrollo') || pLower.includes('asesoría')) {
@@ -76,12 +161,12 @@ export async function scrapeCompanyWebsite(websiteUrl, companyName) {
         }
       });
 
-      // Extract Products & Services dynamically from actual HTML tags
+      // Extract Products & Services dynamically from main page HTML tags
       $('h1, h2, h3, li, .product, .service, .item, article, strong').each((i, el) => {
         const txt = $(el).text().replace(/Desplazarse hacia arriba|ir arriba|scroll to top|todos los derechos reservados|inicio|home|contacto|nosotros/gi, '').trim();
         const tLower = txt.toLowerCase();
         if (txt.length > 5 && txt.length < 90 && !txt.includes('\n')) {
-          if (tLower.includes('dobladora') || tLower.includes('curvado') || tLower.includes('caño') || tLower.includes('tubo') || tLower.includes('fabricación') || tLower.includes('pieza') || tLower.includes('equipo') || tLower.includes('maquinaria') || tLower.includes('insumo') || tLower.includes('matricería') || tLower.includes('perfil') || tLower.includes('bomba') || tLower.includes('frio') || tLower.includes('refrigeración') || tLower.includes('software') || tLower.includes('plataforma') || tLower.includes('sensor')) {
+          if (tLower.includes('dobladora') || tLower.includes('curvado') || tLower.includes('caño') || tLower.includes('tubo') || tLower.includes('fabricación') || tLower.includes('pieza') || tLower.includes('equipo') || tLower.includes('maquinaria') || tLower.includes('insumo') || tLower.includes('matricería') || tLower.includes('perfil') || tLower.includes('bomba') || tLower.includes('frio') || tLower.includes('refrigeración') || tLower.includes('software') || tLower.includes('plataforma') || tLower.includes('sensor') || tLower.includes('válvula') || tLower.includes('neumátic')) {
             if (!profile.products.includes(txt) && !tLower.includes('servicio')) profile.products.push(txt);
           } else if (tLower.includes('servicio') || tLower.includes('doblado') || tLower.includes('mantenimiento') || tLower.includes('mecanizado') || tLower.includes('reparación') || tLower.includes('plegado') || tLower.includes('corte') || tLower.includes('instalación') || tLower.includes('asesoría') || tLower.includes('desarrollo')) {
             if (!profile.services.includes(txt)) profile.services.push(txt);
@@ -119,6 +204,37 @@ export async function scrapeCompanyWebsite(websiteUrl, companyName) {
     }
   } catch (err) {
     console.log(`Universal Scraper notice for ${formattedUrl}: ${err.message}`);
+  }
+
+  // DEEP MULTI-PAGE CRAWL across internal subdirectories (Up to 5 subpages)
+  const targetSubpages = Array.from(discoveredSubpageUrls).slice(0, 5);
+  if (targetSubpages.length > 0) {
+    console.log(`[DEEP CRAWLER] Crawling ${targetSubpages.length} internal subdirectories for ${cleanComp}...`);
+    const subResults = await Promise.allSettled(targetSubpages.map(u => scrapeSubPage(u)));
+
+    subResults.forEach(res => {
+      if (res.status === 'fulfilled' && res.value) {
+        const data = res.value;
+        if (data.products && data.products.length > 0) {
+          data.products.forEach(p => {
+            if (!profile.products.includes(p)) profile.products.push(p);
+          });
+        }
+        if (data.services && data.services.length > 0) {
+          data.services.forEach(s => {
+            if (!profile.services.includes(s)) profile.services.push(s);
+          });
+        }
+        if (data.pageText) {
+          profile.rawText += '\n' + data.pageText;
+        }
+        if (data.paragraphs && data.paragraphs.length > 0) {
+          if (profile.aboutUs.length < 100) {
+            profile.aboutUs += ' ' + data.paragraphs.slice(0, 2).join(' ');
+          }
+        }
+      }
+    });
   }
 
   return mergeUniversalFallbackData(cleanComp, profile);
@@ -165,6 +281,7 @@ function mergeUniversalFallbackData(companyName, profile) {
     } else if (combinedLower.includes('frio') || combinedLower.includes('refrigeracion') || combinedLower.includes('gondola')) {
       dynamicSector = 'Equipamiento de Refrigeración Comercial & Muebles de Frío';
     } else if (combinedLower.includes('bomba') || combinedLower.includes('presurizadora') || combinedLower.includes('electrobomba')) {
+      dynamicSector = 'Fabricación e Importación de Bombas Eléctricas e Industriales';
     } else if (combinedLower.includes('software') || combinedLower.includes('tech') || combinedLower.includes('cloud') || combinedLower.includes('app')) {
       dynamicSector = 'Desarrollo de Software, Cloud & Soluciones Digitales';
     } else if (combinedLower.includes('salud') || combinedLower.includes('medica') || combinedLower.includes('farmac')) {
