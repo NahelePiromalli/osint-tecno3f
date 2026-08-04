@@ -49,12 +49,12 @@ export default function DigitalTransformationTab({ digitalData = {}, companyName
       {/* Breakdown Metrics */}
       <div className="saas-card col-4" style={{ padding: '24px' }}>
         <h3 style={{ fontSize: '1.05rem', marginBottom: '16px', fontWeight: 700, color: 'var(--accent-cyan)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <Layers size={18} /> Seguridad & Presencia Web
+          <Layers size={18} /> Presencia Digital & Portal Web
         </h3>
         <div className="health-score-container" style={{ textAlign: 'left', padding: 0 }}>
           <div style={{ fontSize: '1.8rem', fontWeight: 800, color: '#38bdf8' }}>{breakdown.webPreserve || 80}%</div>
           <p style={{ fontSize: '0.84rem', color: 'var(--text-secondary)', marginTop: '4px' }}>
-            Servidor con cifrado SSL activo y transporte seguro HTTPS verificado.
+            Portal web corporativo y canales de atención digital activos para clientes.
           </p>
         </div>
       </div>

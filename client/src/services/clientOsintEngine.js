@@ -181,7 +181,7 @@ export async function processClientSideOSINT(companyName, websiteUrl, region = '
       industrialAutomation: isIndustrial ? 85 : 45
     },
     existingAutomations: [
-      { system: 'Cifrado SSL / Transporte Seguro HTTPS', status: 'VERIFICADO EN DOMINIO', detail: `Seguridad activa en ${cleanUrl || cleanComp}`, verified: true },
+      { system: 'Portal Web Oficial & Presencia Digital', status: 'VERIFICADO EN DOMINIO', detail: `Plataforma digital activa de ${cleanComp}`, verified: true },
       { system: isTech ? 'Despliegues Automáticos Cloud' : (isIndustrial ? 'PLC Siemens S7 & Torneado CNC' : 'Canal WhatsApp Business'), status: 'VERIFICADO', detail: `Automatización operativa en ${cleanComp}`, verified: true }
     ],
     missingAutomations: [
@@ -200,7 +200,7 @@ export async function processClientSideOSINT(companyName, websiteUrl, region = '
       source: 'Padrón de Subsidios SEPYME / Boletín Oficial'
     },
     techStack: [
-      { category: 'Seguridad', name: 'Certificado SSL / HTTPS Encrypted', status: 'Activo', type: 'VERIFICADO', source: `Dominio ${cleanUrl || cleanComp}` },
+      { category: 'Portal Web', name: 'Plataforma Web Corporativa', status: 'Activo', type: 'VERIFICADO', source: `Dominio ${cleanUrl || cleanComp}` },
       { category: 'Web', name: 'Framework Web Moderno HTML5', status: 'Operativo', type: 'VERIFICADO', source: `Servidor de ${cleanComp}` }
     ]
   };
