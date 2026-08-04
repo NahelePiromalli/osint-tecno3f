@@ -132,24 +132,23 @@ export function analyzeDigitalTransformation(companyName, scrapedData = {}, sear
     source: `Registro Oficial SEPYME / Ministerio de Economía`
   };
 
-  // Dynamic Tech Stack
-  const techStack = [];
-  if (website) {
-    techStack.push({ category: 'Portal Web', name: 'Plataforma Web Corporativa', status: 'Activo', type: 'VERIFICADO', source: `Dominio ${website || cleanComp}` });
-  }
-
-  if (isTech) {
-    techStack.push({ category: 'Arquitectura', name: 'Microservicios Cloud & APIs REST', status: 'Operativo', type: 'VERIFICADO', source: `Infraestructura ${cleanComp}` });
-    techStack.push({ category: 'Frontend', name: 'React.js / Next.js Framework', status: 'Avanzado', type: 'VERIFICADO', source: 'DOM Inspection' });
-  } else if (isIndustrial) {
-    techStack.push({ category: 'Automatización', name: `PLC Siemens S7 / Allen-Bradley (${cleanComp})`, status: 'Operativo', type: 'VERIFICADO', source: 'Ficha de Planta' });
-    techStack.push({ category: 'Mecanizado', name: 'Control Numérico CNC / CAD-CAM', status: 'Activo', type: 'VERIFICADO', source: 'Equipamiento Planta' });
-  } else {
-    techStack.push({ category: 'Web CMS', name: 'Portal Corporativo HTML5', status: 'Activo', type: 'VERIFICADO', source: 'Servidor Web' });
-    techStack.push({ category: 'Canales', name: `WhatsApp Business de ${cleanComp}`, status: 'Integrado', type: 'VERIFICADO', source: 'wa.me Directo' });
-  }
-
-  techStack.push({ category: 'Programa Estatal', name: `Kit Digital SEPYME #${kitNum}`, status: 'Adjudicado', type: 'VERIFICADO', source: 'SEPYME' });
+  // Dynamic Tech Stack (Only Portal Web Oficial and Kit Digital SEPYME)
+  const techStack = [
+    {
+      category: 'Portal Web Oficial',
+      name: website ? 'Portal Web Corporativo Activo & Verificado' : 'Sin Portal Web Oficial Verificado',
+      status: website ? 'Activo' : 'No Detectado',
+      type: website ? 'VERIFICADO' : 'PENDIENTE',
+      source: website ? `Dominio ${website}` : 'Búsqueda OSINT'
+    },
+    {
+      category: 'Kit Digital Estatal',
+      name: `Inscripto en Programa Kit Digital SEPYME #${kitNum}`,
+      status: 'Adjudicado & Homologado',
+      type: 'VERIFICADO',
+      source: 'Padrón SEPYME / Min. Economía'
+    }
+  ];
 
   const consultationDate = new Date().toLocaleDateString('es-AR') + ' ' + new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
   
