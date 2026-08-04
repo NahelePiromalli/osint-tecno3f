@@ -74,20 +74,11 @@ export function categorizeCompany(companyName, scrapedData = {}, searchResults =
     companyType = 'Empresa Consolidada en el Sector';
   }
 
-  // Executive Description Synthesis for "Resumen General"
-  let summary = '';
+  // Executive Description Synthesis for "Resumen General" (What company is & what it sells)
   const productsList = scrapedData.products && scrapedData.products.length > 0 ? scrapedData.products : [];
-
-  if (scrapedData.aboutUs && scrapedData.aboutUs.length > 40 && !scrapedData.aboutUs.includes('javascript')) {
-    summary = scrapedData.aboutUs.trim();
-  } else if (scrapedData.description && scrapedData.description.length > 30) {
-    summary = `${companyName} es una entidad operativa enfocada en ${sector}. ${scrapedData.description.trim()}`;
-  } else {
-    const productsText = productsList.length > 0
-      ? `Comercializa de forma verificada: ${productsList.slice(0, 3).join(', ')}.`
-      : `Ofrece provisión de productos y soluciones técnicas especializadas.`;
-    summary = `${companyName} es una empresa activa operando en el rubro de ${sector}. ${productsText} Brinda soluciones integrales para el sector corporativo e industrial.`;
-  }
+  const summary = (scrapedData.aboutUs && scrapedData.aboutUs.length > 30 && !scrapedData.aboutUs.includes('javascript'))
+    ? scrapedData.aboutUs
+    : `${companyName} es una empresa especializada en ${sector}. Se dedica a la provisión y comercialización de ${productsList.slice(0, 3).join(', ') || 'soluciones especializadas'}, ofreciendo servicios integrales en su rubro.`;
 
   return {
     sector,

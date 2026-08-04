@@ -91,6 +91,18 @@ export function cleanSectorName(rawSector, companyName = '') {
 }
 
 /**
+ * Synthesizes a clean, brief executive description stating what the company is & what it sells.
+ */
+export function synthesizeBriefExecutiveDescription(companyName, sector, products = []) {
+  const cleanComp = companyName.trim();
+  const cleanProductsText = Array.isArray(products) && products.length > 0
+    ? products.slice(0, 3).join(', ')
+    : 'soluciones y servicios especializados';
+
+  return `${cleanComp} es una empresa especializada en ${sector}. Se dedica a la provisión y comercialización de ${cleanProductsText}, ofreciendo soluciones integrales para el sector corporativo e industrial.`;
+}
+
+/**
  * Auxiliary Function: Scrapes an individual internal subpage & extracts clean products, services, text.
  */
 async function scrapeSubPage(url) {
@@ -507,10 +519,8 @@ function mergeUniversalFallbackData(companyName, profile) {
     `Distribuidores autorizados y alianzas estratégicas regionales.`
   ];
 
-  // Synthesize concise executive description
-  const cleanDescription = (profile.aboutUs && profile.aboutUs.length > 50 && !profile.aboutUs.includes('javascript'))
-    ? profile.aboutUs.slice(0, 320).trim() + '.'
-    : (profile.description || `${cleanComp} es una empresa especializada en el sector de ${dynamicSector}, ofreciendo soluciones integrales para clientes corporativos e industriales.`);
+  // Synthesize concise executive description (What the company is & what it sells)
+  const cleanDescription = synthesizeBriefExecutiveDescription(cleanComp, dynamicSector, dynamicProducts);
 
   const whatItSells = `${cleanComp} comercializa de forma verificada: ${dynamicProducts.slice(0, 4).join(', ')}.`;
   const whoBuys = combinedLower.includes('gobierno') || combinedLower.includes('municipio') || combinedLower.includes('licitac')
