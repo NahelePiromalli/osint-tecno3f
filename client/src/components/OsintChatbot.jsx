@@ -16,7 +16,7 @@ export default function OsintChatbot({ currentReport }) {
         {
           id: 1,
           sender: 'bot',
-          text: `¡Hola! Soy tu **Asistente OSINT Tecno3F**. He analizado el informe completo de **${companyName}**.\n¿Qué te gustaría saber o profundizar?`
+          text: `¡Hola! Soy **Tecnobot3F**, tu asistente de inteligencia OSINT. He analizado el informe completo de **${companyName}**.\n¿Qué te gustaría saber o profundizar?`
         }
       ]);
     }
@@ -100,7 +100,7 @@ export default function OsintChatbot({ currentReport }) {
             transition: 'transform 0.2s ease'
           }}
           className="chatbot-trigger-btn"
-          title="Abrir Asistente OSINT"
+          title="Abrir Tecnobot3F"
         >
           <MessageSquare size={26} />
           <span style={{ position: 'absolute', top: '2px', right: '2px', width: '14px', height: '14px', borderRadius: '50%', background: '#10b981', border: '2px solid #0b0f17' }}></span>
@@ -135,7 +135,7 @@ export default function OsintChatbot({ currentReport }) {
                 <Bot size={20} />
               </div>
               <div>
-                <div style={{ fontSize: '0.96rem', fontWeight: 800, color: '#fff' }}>Asistente OSINT Tecno3F</div>
+                <div style={{ fontSize: '0.96rem', fontWeight: 800, color: '#fff' }}>Tecnobot3F</div>
                 <div style={{ fontSize: '0.74rem', color: '#34d399', fontWeight: 700 }}>● Conectado al informe de {companyName}</div>
               </div>
             </div>
