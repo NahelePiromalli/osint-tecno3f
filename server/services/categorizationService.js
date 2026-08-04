@@ -16,30 +16,32 @@ export function categorizeCompany(companyName, scrapedData = {}, searchResults =
   ).toLowerCase();
 
   // Industry Sector Classifier
-  let sector = 'Servicios Generales & Comercio';
+  let sector = scrapedData.customSector || 'Servicios Generales & Comercio';
   let sectorIcon = 'briefcase';
 
-  if (matchAny(combinedText, ['zeziola', 'dobladora', 'curvado', 'caño', 'tubo', 'perfil', 'matriceria', 'metal', 'taller', 'torneria', 'industrial', 'maquinaria', 'construccion', 'obra', 'fabrica', 'manufactura', 'herreria', 'caldereria'])) {
-    sector = combinedText.includes('dobladora') || combinedText.includes('curvado') || combinedText.includes('caño') || combinedText.includes('zeziola') ? 'Industria Metalúrgica & Curvado de Caños' : 'Industria Metalúrgica & Manufactura';
-    sectorIcon = 'box';
-  } else if (matchAny(combinedText, ['tech', 'software', 'app', 'digital', 'cloud', 'ia', 'ai', 'sistemas', 'data', 'ciberseguridad'])) {
-    sector = 'Tecnología & Software';
-    sectorIcon = 'cpu';
-  } else if (matchAny(combinedText, ['finanz', 'banco', 'pay', 'cobro', 'credito', 'seguro', 'fintech', 'presta'])) {
-    sector = 'Finanzas & Servicios Comerciales';
-    sectorIcon = 'dollar-sign';
-  } else if (matchAny(combinedText, ['salud', 'medica', 'farmac', 'clinic', 'hospital', 'sanatorio'])) {
-    sector = 'Salud & Biotecnología';
-    sectorIcon = 'activity';
-  } else if (matchAny(combinedText, ['tienda', 'shop', 'ecommerce', 'retail', 'venta', 'comercio'])) {
-    sector = 'Retail & Comercio';
-    sectorIcon = 'shopping-bag';
-  } else if (matchAny(combinedText, ['alimento', 'bebida', 'gastronomia', 'agro', 'campo'])) {
-    sector = 'Agro, Alimentos & Gastronomía';
-    sectorIcon = 'coffee';
-  } else if (matchAny(combinedText, ['logistica', 'transporte', 'envio', 'distribucion', 'flete'])) {
-    sector = 'Logística & Transporte';
-    sectorIcon = 'truck';
+  if (!scrapedData.customSector) {
+    if (matchAny(combinedText, ['zeziola', 'dobladora', 'curvado', 'caño', 'tubo', 'perfil', 'matriceria', 'metal', 'taller', 'torneria', 'industrial', 'maquinaria', 'construccion', 'obra', 'fabrica', 'manufactura', 'herreria', 'caldereria'])) {
+      sector = combinedText.includes('dobladora') || combinedText.includes('curvado') || combinedText.includes('caño') || combinedText.includes('zeziola') ? 'Industria Metalúrgica & Curvado de Caños' : 'Industria Metalúrgica & Manufactura';
+      sectorIcon = 'box';
+    } else if (matchAny(combinedText, ['tech', 'software', 'app', 'digital', 'cloud', 'ia', 'ai', 'sistemas', 'data', 'ciberseguridad'])) {
+      sector = 'Tecnología & Software';
+      sectorIcon = 'cpu';
+    } else if (matchAny(combinedText, ['finanz', 'banco', 'pay', 'cobro', 'credito', 'seguro', 'fintech', 'presta'])) {
+      sector = 'Finanzas & Servicios Comerciales';
+      sectorIcon = 'dollar-sign';
+    } else if (matchAny(combinedText, ['salud', 'medica', 'farmac', 'clinic', 'hospital', 'sanatorio'])) {
+      sector = 'Salud & Biotecnología';
+      sectorIcon = 'activity';
+    } else if (matchAny(combinedText, ['tienda', 'shop', 'ecommerce', 'retail', 'venta', 'comercio'])) {
+      sector = 'Retail & Comercio';
+      sectorIcon = 'shopping-bag';
+    } else if (matchAny(combinedText, ['alimento', 'bebida', 'gastronomia', 'agro', 'campo'])) {
+      sector = 'Agro, Alimentos & Gastronomía';
+      sectorIcon = 'coffee';
+    } else if (matchAny(combinedText, ['logistica', 'transporte', 'envio', 'distribucion', 'flete'])) {
+      sector = 'Logística & Transporte';
+      sectorIcon = 'truck';
+    }
   }
 
   // Business Model Classifier
