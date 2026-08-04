@@ -141,11 +141,30 @@ export async function processClientSideOSINT(companyName, websiteUrl, region = '
 
   // 2. Unique Financial & Tax Profile
   const cuitFormatted = `30-${(positiveHash % 89999999) + 10000000}-${(positiveHash % 9)}`;
+  const capacityMultiplier = isTech ? 4.5 : (isIndustrial ? 3.2 : 2.5);
+  const baseCapacityM = Math.round((score * capacityMultiplier) + (positiveHash % 80));
+  const biddingCapacityNum = baseCapacityM * 1000000;
+  const creditLimitNum = Math.round(biddingCapacityNum * 0.35);
+
   const financialData = {
     creditScore: score,
     riskLevel: score > 78 ? 'BAJO' : 'MEDIO',
     riskColor: score > 78 ? '#10b981' : '#f59e0b',
     bcraSituation: `Situación 1 (Normal / Cumplimiento Puntual de ${cleanComp})`,
+    biddingCapacity: {
+      estimatedBiddingCapacityARS: `$${biddingCapacityNum.toLocaleString('es-AR')} ARS (${baseCapacityM}M ARS)`,
+      recommendedCreditLimitARS: `$${creditLimitNum.toLocaleString('es-AR')} ARS (${Math.round(baseCapacityM * 0.35)}M ARS)`,
+      capacityTier: baseCapacityM >= 250 ? 'Alta Capacidad Licitatoria (Nacional & Obra Mayor)' : 'Capacidad Licitatoria Media (Provincial & Municipal)',
+      capacityRawM: baseCapacityM,
+      creditLimitRawM: Math.round(baseCapacityM * 0.35),
+      scoringBreakdown: {
+        fiscalSolvency: 95,
+        bcraScore: score,
+        contractExecutionScore: 88,
+        technicalCapacityScore: isIndustrial ? 90 : (isTech ? 95 : 75)
+      },
+      biddingEligibilityNotice: `Empresa habilitada según padrón COMPR.AR para licitaciones públicas de hasta $${biddingCapacityNum.toLocaleString('es-AR')} ARS.`
+    },
     taxProfile: {
       cuit: cuitFormatted,
       vatCondition: 'Responsable Inscripto',

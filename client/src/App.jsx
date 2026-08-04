@@ -13,6 +13,7 @@ import FinancialTab from './components/FinancialTab';
 import NewsTab from './components/NewsTab';
 import SupportTab from './components/SupportTab';
 import HistoryTab from './components/HistoryTab';
+import CompareTab from './components/CompareTab';
 import { processClientSideOSINT } from './services/clientOsintEngine';
 import { LayoutDashboard, Briefcase, HelpCircle, Target, Scale, Landmark, Newspaper, HeartHandshake, History, AlertCircle, Layers, FileCheck, RefreshCw, Cpu } from 'lucide-react';
 
@@ -51,6 +52,7 @@ class ErrorBoundary extends Component {
 
 export default function App() {
   const [report, setReport] = useState(null);
+  const [comparisonReport, setComparisonReport] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState('overview');
@@ -121,6 +123,7 @@ export default function App() {
     setLoading(true);
     setError(null);
     setReport(null); // Complete state cleanup before new scan
+    setComparisonReport(null);
     setShowHistoryOnly(false);
     let data = null;
 
@@ -170,6 +173,46 @@ export default function App() {
     }
   };
 
+  // Perform Dual Company Compare
+  const handleCompare = async ({ companyA, websiteA, companyB, websiteB }) => {
+    setLoading(true);
+    setError(null);
+    setReport(null);
+    setComparisonReport(null);
+    setShowHistoryOnly(false);
+
+    try {
+      const response = await fetch('/api/osint/compare', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ companyA, websiteA, companyB, websiteB })
+      }).catch(() => null);
+
+      let data = null;
+      if (response && response.ok) {
+        data = await response.json().catch(() => null);
+      }
+
+      if (!data || !data.reportA) {
+        const reportA = await processClientSideOSINT(companyA, websiteA);
+        const reportB = await processClientSideOSINT(companyB, websiteB);
+        data = { reportA, reportB };
+      }
+
+      setComparisonReport(data);
+      setActiveTab('compare');
+
+    } catch (err) {
+      console.error('Compare Error:', err);
+      const reportA = await processClientSideOSINT(companyA, websiteA);
+      const reportB = await processClientSideOSINT(companyB, websiteB);
+      setComparisonReport({ reportA, reportB });
+      setActiveTab('compare');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleClearHistory = () => {
     if (user) {
       const historyKey = `osint_tecno3f_history_${user.id}`;
@@ -180,6 +223,7 @@ export default function App() {
 
   const handleReset = () => {
     setReport(null);
+    setComparisonReport(null);
     setError(null);
     setActiveTab('overview');
     setShowHistoryOnly(false);
@@ -212,6 +256,7 @@ export default function App() {
 
       <SearchForm
         onScan={handleScan}
+        onCompare={handleCompare}
         loading={loading}
         user={user}
         onOpenHistory={handleOpenHistory}
@@ -237,7 +282,16 @@ export default function App() {
         </div>
       )}
 
-      {!loading && report && !showHistoryOnly && (
+      {/* Benchmarking Comparison View */}
+      {!loading && comparisonReport && !showHistoryOnly && (
+        <ErrorBoundary>
+          <div>
+            <CompareTab reportA={comparisonReport.reportA} reportB={comparisonReport.reportB} />
+          </div>
+        </ErrorBoundary>
+      )}
+
+      {!loading && report && !comparisonReport && !showHistoryOnly && (
         <ErrorBoundary>
           <div>
             {/* Navigation Tabs Navbar */}
@@ -297,7 +351,7 @@ export default function App() {
         </ErrorBoundary>
       )}
 
-      {!loading && (showHistoryOnly || !report) && (
+      {!loading && (showHistoryOnly || (!report && !comparisonReport)) && (
         <div>
           {showHistoryOnly && user ? (
             <div>
@@ -319,7 +373,7 @@ export default function App() {
             </div>
           ) : (
             <div className="saas-card" style={{ padding: '54px 28px', textAlign: 'center' }}>
-              <div style={{ width: '64px', height: '64px', borderRadius: '18px', background: 'rgba(139, 92, 246, 0.15)', border: '1px solid rgba(139, 92, 246, 0.3)', color: '#c4b5fd', display: 'flex', alignItems: 'center', justifyCenter: 'center', margin: '0 auto 20px auto' }}>
+              <div style={{ width: '64px', height: '64px', borderRadius: '18px', background: 'rgba(139, 92, 246, 0.15)', border: '1px solid rgba(139, 92, 246, 0.3)', color: '#c4b5fd', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px auto' }}>
                 <Layers size={32} style={{ margin: 'auto' }} />
               </div>
               <h2 style={{ fontSize: '1.5rem', fontWeight: 800 }}>Plataforma OSINT Tecno3F de Inteligencia Empresarial</h2>

@@ -12,6 +12,7 @@ import { analyzePublicContracts } from './services/publicContractsService.js';
 import { generateSwotAnalysis } from './services/swotAnalysisService.js';
 import { analyzeDigitalTransformation } from './services/digitalTransformationService.js';
 import { analyzeCompanyWithGemini } from './services/aiExtractionService.js';
+import { compareCompaniesOSINT } from './services/compareService.js';
 import { registerUserInDB, authenticateUserInDB } from './database.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -69,6 +70,16 @@ app.get('/api/osint/health', (req, res) => {
     timestamp: new Date().toISOString(),
     service: 'OSINT Tecno3F Engine v4.0'
   });
+});
+
+// Sample Companies Endpoint
+app.get('/api/osint/samples', (req, res) => {
+  res.json([
+    { name: 'Smartmation', website: 'smartmation.com' },
+    { name: 'Baigorria Industrial', website: 'baigorriaindustrial.com' },
+    { name: 'BombasNIR', website: 'bombasnir.com.ar' },
+    { name: 'Mercado Libre', website: 'mercadolibre.com' }
+  ]);
 });
 
 // Main OSINT Scan Endpoint
@@ -166,6 +177,31 @@ app.post('/api/osint/scan', async (req, res) => {
       error: 'Inconveniente interno al procesar el análisis OSINT.',
       details: error.message
     });
+  }
+});
+
+// Dual Company OSINT Benchmarking Endpoint
+app.post('/api/osint/compare', async (req, res) => {
+  try {
+    const { companyA, websiteA, companyB, websiteB } = req.body;
+
+    if (!companyA || !companyA.trim() || !companyB || !companyB.trim()) {
+      return res.status(400).json({ error: 'Debes ingresar el nombre de ambas empresas para comparar.' });
+    }
+
+    console.log(`[OSINT COMPARE START] Benchmarking "${companyA}" VS "${companyB}"`);
+
+    const result = await compareCompaniesOSINT(
+      { companyName: companyA, website: websiteA },
+      { companyName: companyB, website: websiteB }
+    );
+
+    console.log(`[OSINT COMPARE COMPLETE] Benchmarking generated for "${companyA}" vs "${companyB}"`);
+    return res.json(result);
+
+  } catch (error) {
+    console.error('OSINT Compare Error:', error);
+    return res.status(500).json({ error: 'Error al procesar la comparación.', details: error.message });
   }
 });
 

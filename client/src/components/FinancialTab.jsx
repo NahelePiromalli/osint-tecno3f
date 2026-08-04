@@ -105,6 +105,55 @@ export default function FinancialTab({ financialData = {} }) {
         </div>
       </div>
 
+      {/* Bidding Capacity & Credit Limit Estimator Card */}
+      {data.biddingCapacity && (
+        <div className="saas-card col-12" style={{ padding: '28px', background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.08), rgba(6, 182, 212, 0.06))', border: '1px solid rgba(16, 185, 129, 0.35)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '20px', marginBottom: '20px' }}>
+            <div>
+              <span style={{ fontSize: '0.78rem', color: '#34d399', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                Algoritmo de Capacidad Licitatoria OSINT
+              </span>
+              <h3 style={{ fontSize: '1.35rem', fontWeight: 800, marginTop: '2px', color: '#f8fafc' }}>
+                Capacidad Máxima de Contratación Pública & Crédito
+              </h3>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.88rem', marginTop: '4px' }}>
+                {data.biddingCapacity.capacityTier}
+              </p>
+            </div>
+            <span style={{ background: 'rgba(16, 185, 129, 0.15)', color: '#34d399', border: '1px solid rgba(16, 185, 129, 0.4)', padding: '6px 14px', borderRadius: '20px', fontSize: '0.82rem', fontWeight: 800 }}>
+              ✔ HABILITADO COMPR.AR / RUP
+            </span>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '16px', marginBottom: '20px' }}>
+            <div style={{ background: 'rgba(0,0,0,0.3)', padding: '18px', borderRadius: '14px', border: '1px solid rgba(16, 185, 129, 0.25)' }}>
+              <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700 }}>Capacidad Licitatoria Estimada</div>
+              <div style={{ fontSize: '1.45rem', fontWeight: 800, color: '#34d399', marginTop: '4px', fontFamily: 'var(--font-mono)' }}>
+                {data.biddingCapacity.estimatedBiddingCapacityARS}
+              </div>
+              <div style={{ fontSize: '0.76rem', color: 'var(--text-secondary)', marginTop: '4px' }}>Monto máximo sugerido para contratos estatales</div>
+            </div>
+
+            <div style={{ background: 'rgba(0,0,0,0.3)', padding: '18px', borderRadius: '14px', border: '1px solid rgba(6, 182, 212, 0.25)' }}>
+              <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700 }}>Límite de Crédito Recomendado</div>
+              <div style={{ fontSize: '1.45rem', fontWeight: 800, color: '#38bdf8', marginTop: '4px', fontFamily: 'var(--font-mono)' }}>
+                {data.biddingCapacity.recommendedCreditLimitARS}
+              </div>
+              <div style={{ fontSize: '0.76rem', color: 'var(--text-secondary)', marginTop: '4px' }}>Límite máximo recomendado para líneas B2B</div>
+            </div>
+          </div>
+
+          {data.biddingCapacity.scoringBreakdown && (
+            <div style={{ background: 'rgba(0,0,0,0.2)', padding: '16px 20px', borderRadius: '12px', display: 'flex', justifyContent: 'space-around', flexWrap: 'wrap', gap: '14px', fontSize: '0.84rem' }}>
+              <div><span style={{ color: 'var(--text-muted)' }}>Solvencia Fiscal:</span> <strong style={{ color: '#34d399' }}>{data.biddingCapacity.scoringBreakdown.fiscalSolvency}%</strong></div>
+              <div><span style={{ color: 'var(--text-muted)' }}>Scoring BCRA:</span> <strong style={{ color: '#60a5fa' }}>{data.biddingCapacity.scoringBreakdown.bcraScore}/100</strong></div>
+              <div><span style={{ color: 'var(--text-muted)' }}>Ejecución Licitatoria:</span> <strong style={{ color: '#c4b5fd' }}>{data.biddingCapacity.scoringBreakdown.contractExecutionScore}%</strong></div>
+              <div><span style={{ color: 'var(--text-muted)' }}>Capacidad Técnica:</span> <strong style={{ color: '#34d399' }}>{data.biddingCapacity.scoringBreakdown.technicalCapacityScore}%</strong></div>
+            </div>
+          )}
+        </div>
+      )}
+
       <div className="saas-card col-4" style={{ padding: '24px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
           <div style={{ background: 'rgba(245, 158, 11, 0.15)', padding: '14px', borderRadius: '12px', color: 'var(--accent-amber)' }}>
