@@ -1,6 +1,8 @@
+import { cleanSectorName } from './websiteScraperService.js';
+
 /**
  * OSINT Categorization Service for Companies
- * Classifies industry, business model, size, and operational profile.
+ * Classifies industry, business model, size, and operational profile cleanly.
  */
 export function categorizeCompany(companyName, scrapedData = {}, searchResults = {}) {
   const projects = scrapedData.projects || [];
@@ -15,13 +17,22 @@ export function categorizeCompany(companyName, scrapedData = {}, searchResults =
     projects.join(' ')
   ).toLowerCase();
 
-  // Industry Sector Classifier
-  let sector = scrapedData.customSector || 'Servicios Generales & Comercio';
+  // Clean Industry Sector Classifier
+  let sector = cleanSectorName(scrapedData.customSector, companyName);
   let sectorIcon = 'briefcase';
 
-  if (!scrapedData.customSector) {
-    if (matchAny(combinedText, ['zeziola', 'dobladora', 'curvado', 'caño', 'tubo', 'perfil', 'matriceria', 'metal', 'taller', 'torneria', 'industrial', 'maquinaria', 'construccion', 'obra', 'fabrica', 'manufactura', 'herreria', 'caldereria'])) {
-      sector = combinedText.includes('dobladora') || combinedText.includes('curvado') || combinedText.includes('caño') || combinedText.includes('zeziola') ? 'Industria Metalúrgica & Curvado de Caños' : 'Industria Metalúrgica & Manufactura';
+  if (!scrapedData.customSector || sector === 'Servicios Comerciales & Provisión Industrial') {
+    if (matchAny(combinedText, ['zeziola', 'dobladora', 'curvado', 'caño', 'tubo', 'perfil', 'matriceria'])) {
+      sector = 'Fabricación de Dobladoras de Caños & Curvado Industrial';
+      sectorIcon = 'box';
+    } else if (matchAny(combinedText, ['valvula', 'neumatic', 'instrumento'])) {
+      sector = 'Válvulas, Instrumentación Neumática & Control de Procesos';
+      sectorIcon = 'sliders';
+    } else if (matchAny(combinedText, ['smartmation', 'telegestión', 'iot', 'alumbrado'])) {
+      sector = 'Telegestión Cloud e IoT para Alumbrado Público y Smart Cities';
+      sectorIcon = 'cpu';
+    } else if (matchAny(combinedText, ['metal', 'taller', 'torneria', 'industrial', 'maquinaria', 'construccion', 'obra', 'fabrica', 'manufactura', 'herreria'])) {
+      sector = 'Industria Metalúrgica, Tornería CNC & Mecanizado';
       sectorIcon = 'box';
     } else if (matchAny(combinedText, ['tech', 'software', 'app', 'digital', 'cloud', 'ia', 'ai', 'sistemas', 'data', 'ciberseguridad'])) {
       sector = 'Tecnología & Software';
@@ -63,8 +74,20 @@ export function categorizeCompany(companyName, scrapedData = {}, searchResults =
     companyType = 'Empresa Consolidada en el Sector';
   }
 
-  // Summary
-  let summary = scrapedData.aboutUs || scrapedData.description || `${companyName} es una firma activa en el rubro de ${sector}, enfocada en brindar ${businessModel}.`;
+  // Executive Description Synthesis for "Resumen General"
+  let summary = '';
+  const productsList = scrapedData.products && scrapedData.products.length > 0 ? scrapedData.products : [];
+
+  if (scrapedData.aboutUs && scrapedData.aboutUs.length > 40 && !scrapedData.aboutUs.includes('javascript')) {
+    summary = scrapedData.aboutUs.trim();
+  } else if (scrapedData.description && scrapedData.description.length > 30) {
+    summary = `${companyName} es una entidad operativa enfocada en ${sector}. ${scrapedData.description.trim()}`;
+  } else {
+    const productsText = productsList.length > 0
+      ? `Comercializa de forma verificada: ${productsList.slice(0, 3).join(', ')}.`
+      : `Ofrece provisión de productos y soluciones técnicas especializadas.`;
+    summary = `${companyName} es una empresa activa operando en el rubro de ${sector}. ${productsText} Brinda soluciones integrales para el sector corporativo e industrial.`;
+  }
 
   return {
     sector,

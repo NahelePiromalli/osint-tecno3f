@@ -2,6 +2,95 @@ import axios from 'axios';
 import * as cheerio from 'cheerio';
 
 /**
+ * Deduplicates and cleans product/service items to eliminate repetition and noise.
+ */
+export function deduplicateItems(items, companyName = '') {
+  if (!Array.isArray(items) || items.length === 0) return [];
+
+  const cleanedItems = [];
+  const normalizedSeen = new Set();
+
+  // Sort longest items first so specific items take precedence over single words like "Válvulas"
+  const sorted = [...items].sort((a, b) => (b || '').length - (a || '').length);
+
+  sorted.forEach(rawItem => {
+    if (!rawItem || typeof rawItem !== 'string') return;
+
+    // Strip leading numbers/bullets: "1) VÁLVULAS", "5 - RELE NEUMÁTICO", "• "
+    let item = rawItem
+      .replace(/^[\d\)\.\-\s•\*]+/, '')
+      .replace(/Desplazarse hacia arriba|ir arriba|scroll to top|todos los derechos reservados|home|inicio|bienvenidos|contacto|nosotros|ver más|categoría/gi, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    if (item.length < 4 || item.length > 95) return;
+
+    // Normalize for comparison (lowercase, no accents)
+    const norm = item.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+
+    if (normalizedSeen.has(norm)) return;
+
+    // Check if this single word is already contained in a longer phrase
+    let isRedundantSubstring = false;
+    for (const existing of normalizedSeen) {
+      if (existing === norm || (existing.includes(norm) && norm.split(' ').length <= 2)) {
+        isRedundantSubstring = true;
+        break;
+      }
+    }
+
+    if (!isRedundantSubstring) {
+      // Capitalize first letter cleanly
+      const formatted = item.charAt(0).toUpperCase() + item.slice(1);
+      cleanedItems.push(formatted);
+      normalizedSeen.add(norm);
+    }
+  });
+
+  return cleanedItems.reverse().slice(0, 8);
+}
+
+/**
+ * Sanitizes and cleans sector names to ensure a concise, professional industry title.
+ */
+export function cleanSectorName(rawSector, companyName = '') {
+  if (!rawSector) return 'Servicios Comerciales & Provisión Industrial';
+
+  let cleaned = rawSector
+    .replace(/^[\d\)\.\-\s]+/, '') // Strip leading numbers "3) ", "1. "
+    .replace(/Desplazarse hacia arriba|ir arriba|scroll to top|todos los derechos reservados|home|inicio|bienvenidos|sitio oficial|pagina principal/gi, '')
+    .replace(new RegExp(`-?\\s*${companyName}`, 'gi'), '')
+    .replace(/-\s*SRL|-\s*S\.A\.|-\s*SA/gi, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  const lower = cleaned.toLowerCase();
+  if (lower.includes('valvula') || lower.includes('neumatic') || lower.includes('instrumento')) {
+    return 'Válvulas, Instrumentación Neumática & Control de Procesos';
+  }
+  if (lower.includes('zeziola') || lower.includes('dobladora') || lower.includes('curvado')) {
+    return 'Fabricación de Dobladoras de Caños & Curvado Industrial';
+  }
+  if (lower.includes('smartmation') || lower.includes('telegestión') || lower.includes('iot')) {
+    return 'Telegestión Cloud e IoT para Alumbrado Público y Smart Cities';
+  }
+  if (lower.includes('bomba') || lower.includes('presurizadora') || lower.includes('bombeo')) {
+    return 'Fabricación e Importación de Bombas Eléctricas e Industriales';
+  }
+  if (lower.includes('baigorria') || lower.includes('torneria') || lower.includes('mecanizado')) {
+    return 'Industria Metalúrgica, Tornería CNC & Mecanizado de Precisión';
+  }
+  if (lower.includes('software') || lower.includes('cloud') || lower.includes('tecnologia')) {
+    return 'Desarrollo de Software, Cloud & Soluciones Digitales';
+  }
+
+  if (cleaned.length > 55) {
+    cleaned = cleaned.slice(0, 55).replace(/\s\w+$/, '');
+  }
+  return cleaned ? (cleaned.charAt(0).toUpperCase() + cleaned.slice(1)) : 'Servicios Comerciales & Provisión Industrial';
+}
+
+/**
  * Auxiliary Function: Scrapes an individual internal subpage & extracts clean products, services, text.
  */
 async function scrapeSubPage(url) {
@@ -25,7 +114,6 @@ async function scrapeSubPage(url) {
     const products = [];
     const services = [];
 
-    // Extract products and services from subpage headings & lists
     $('h1, h2, h3, li, .product, .service, .item, article, strong').each((i, el) => {
       const txt = $(el).text().replace(/Desplazarse hacia arriba|ir arriba|scroll to top|todos los derechos reservados|inicio|home|contacto|nosotros/gi, '').trim();
       const tLower = txt.toLowerCase();
@@ -61,7 +149,6 @@ async function scrapeSubPage(url) {
 
 /**
  * Universal Multi-Page & Subdirectory Website Scraper for ANY Company.
- * Parses Main Landing Page + Key Internal Subdirectories (Products, About, Services, Categories).
  */
 export async function scrapeCompanyWebsite(websiteUrl, companyName) {
   const cleanComp = companyName ? companyName.trim() : 'Empresa';
@@ -119,7 +206,6 @@ export async function scrapeCompanyWebsite(websiteUrl, companyName) {
       profile.title = $('title').text().trim() || cleanComp;
       profile.description = $('meta[name="description"]').attr('content') || $('meta[property="og:description"]').attr('content') || '';
 
-      // Discover internal subdirectory URLs on the SAME domain
       $('a[href]').each((i, el) => {
         const href = $(el).attr('href');
         if (!href || href.startsWith('#') || href.startsWith('javascript:') || href.startsWith('mailto:') || href.startsWith('tel:')) return;
@@ -137,14 +223,12 @@ export async function scrapeCompanyWebsite(websiteUrl, companyName) {
         } catch (e) {}
       });
 
-      // Clean HTML noise
       $('script, style, noscript, iframe, footer, nav, header, .cookie, .banner, .popup').remove();
 
       const pageText = $('body').text().replace(/\s+/g, ' ').trim();
       profile.rawText = pageText.slice(0, 4000);
       const lower = pageText.toLowerCase();
 
-      // Extract Products & Services directly from meta description & title phrases
       const metaCombined = `${profile.title}. ${profile.description}`;
       const metaPhrases = metaCombined.split(/[.,;|•–\n]/).map(p => p.trim()).filter(p => p.length > 4 && p.length < 80);
 
@@ -161,7 +245,6 @@ export async function scrapeCompanyWebsite(websiteUrl, companyName) {
         }
       });
 
-      // Extract Products & Services dynamically from main page HTML tags
       $('h1, h2, h3, li, .product, .service, .item, article, strong').each((i, el) => {
         const txt = $(el).text().replace(/Desplazarse hacia arriba|ir arriba|scroll to top|todos los derechos reservados|inicio|home|contacto|nosotros/gi, '').trim();
         const tLower = txt.toLowerCase();
@@ -174,13 +257,11 @@ export async function scrapeCompanyWebsite(websiteUrl, companyName) {
         }
       });
 
-      // Real Certifications Extraction from HTML text
       if (lower.includes('iso') || lower.includes('certifica') || lower.includes('norma') || lower.includes('iram') || lower.includes('sello') || lower.includes('fda')) {
         const certMatches = pageText.match(/(ISO\s?\d{4,5}|IRAM\s?\d+|Certificación\s[A-Za-z0-9\s]+|Sello de Calidad[A-Za-z0-9\s]+|Habilitación[A-Za-z0-9\s]+)/gi) || [];
         profile.certifications = Array.from(new Set(certMatches)).slice(0, 4);
       }
 
-      // Extract About Us & Value Proposition from paragraphs
       const paragraphs = [];
       $('p').each((i, el) => {
         const pTxt = $(el).text().trim();
@@ -193,20 +274,18 @@ export async function scrapeCompanyWebsite(websiteUrl, companyName) {
         profile.valueProposition = paragraphs[0];
       }
 
-      // Generate Dynamic Custom Sector from Title & Description
       const sectorKeywords = (profile.title + ' ' + profile.description)
         .replace(/Desplazarse hacia arriba|ir arriba|scroll to top|todos los derechos reservados|home|inicio|bienvenidos|sitio oficial|pagina principal/gi, '')
         .replace(/\s+/g, ' ')
         .trim();
       if (sectorKeywords.length > 8) {
-        profile.customSector = sectorKeywords.slice(0, 80);
+        profile.customSector = cleanSectorName(sectorKeywords, cleanComp);
       }
     }
   } catch (err) {
     console.log(`Universal Scraper notice for ${formattedUrl}: ${err.message}`);
   }
 
-  // DEEP MULTI-PAGE CRAWL across internal subdirectories (Up to 5 subpages)
   const targetSubpages = Array.from(discoveredSubpageUrls).slice(0, 5);
   if (targetSubpages.length > 0) {
     console.log(`[DEEP CRAWLER] Crawling ${targetSubpages.length} internal subdirectories for ${cleanComp}...`);
@@ -240,9 +319,6 @@ export async function scrapeCompanyWebsite(websiteUrl, companyName) {
   return mergeUniversalFallbackData(cleanComp, profile);
 }
 
-/**
- * Universal Dynamic Profile & Business Answers Generator for ANY Company.
- */
 function generateUniversalFallbackProfile(companyName, hasWebsite) {
   const cleanComp = companyName.trim();
   return mergeUniversalFallbackData(cleanComp, {
@@ -256,9 +332,6 @@ function generateUniversalFallbackProfile(companyName, hasWebsite) {
   });
 }
 
-/**
- * Synthesizes 100% Dynamic Custom Company Data from scraped HTML + fallback rules.
- */
 function mergeUniversalFallbackData(companyName, profile) {
   const cleanComp = companyName.trim();
   const lowerComp = cleanComp.toLowerCase();
@@ -266,18 +339,17 @@ function mergeUniversalFallbackData(companyName, profile) {
   const lowerDesc = (profile.description || '').toLowerCase();
   const combinedLower = `${lowerComp} ${lowerTitle} ${lowerDesc} ${profile.aboutUs.toLowerCase()}`;
 
-  // 1. DYNAMIC CUSTOM SECTOR CLASSIFICATION DIRECTLY FROM SITE CONTENT
-  let dynamicSector = profile.customSector || '';
+  let dynamicSector = cleanSectorName(profile.customSector, cleanComp);
 
-  if (!dynamicSector) {
+  if (!dynamicSector || dynamicSector.length < 5) {
     if (combinedLower.includes('zeziola') || combinedLower.includes('dobladora') || combinedLower.includes('curvado') || combinedLower.includes('caño') || combinedLower.includes('tubo')) {
-      dynamicSector = 'Fabricación de Dobladoras de Caños & Curvado Industrial de Tubos';
+      dynamicSector = 'Fabricación de Dobladoras de Caños & Curvado Industrial';
     } else if (combinedLower.includes('baigorria') || combinedLower.includes('mecanizado') || combinedLower.includes('torneria') || combinedLower.includes('metal')) {
-      dynamicSector = 'Industria Metalúrgica, Tornería CNC & Piezas Mecanizadas';
+      dynamicSector = 'Industria Metalúrgica, Tornería CNC & Mecanizado de Precisión';
     } else if (combinedLower.includes('smartmation') || combinedLower.includes('telegestión') || combinedLower.includes('iot') || combinedLower.includes('alumbrado')) {
-      dynamicSector = 'Sistemas de Telegestión Cloud e IoT para Ciudades Inteligentes';
+      dynamicSector = 'Telegestión Cloud e IoT para Alumbrado Público y Smart Cities';
     } else if (combinedLower.includes('valvula') || combinedLower.includes('neumatic') || combinedLower.includes('instrumento')) {
-      dynamicSector = 'Válvulas, Instrumentos Neumáticos de Control & Accesorios Industriales';
+      dynamicSector = 'Válvulas, Instrumentación Neumática & Control de Procesos';
     } else if (combinedLower.includes('frio') || combinedLower.includes('refrigeracion') || combinedLower.includes('gondola')) {
       dynamicSector = 'Equipamiento de Refrigeración Comercial & Muebles de Frío';
     } else if (combinedLower.includes('bomba') || combinedLower.includes('presurizadora') || combinedLower.includes('electrobomba')) {
@@ -291,35 +363,35 @@ function mergeUniversalFallbackData(companyName, profile) {
     } else if (combinedLower.includes('obra') || combinedLower.includes('construc') || combinedLower.includes('arquitectura')) {
       dynamicSector = 'Construcción, Arquitectura & Obras de Infraestructura';
     } else {
-      dynamicSector = `${cleanComp} - Provisión Comercial & Servicios Especializados`;
+      dynamicSector = 'Servicios Comerciales & Provisión Industrial';
     }
   }
 
-  // 2. DYNAMIC SPECIFIC PRODUCTS EXTRACTION
-  let dynamicProducts = Array.from(new Set(profile.products)).filter(p => p.length > 4);
+  // Deduplicate products and services
+  let dynamicProducts = deduplicateItems(profile.products, cleanComp);
 
   if (dynamicProducts.length < 2) {
     if (combinedLower.includes('zeziola') || combinedLower.includes('dobladora') || combinedLower.includes('curvado')) {
       dynamicProducts = [
-        `Dobladoras de caños manuales, automáticas, con PLC y CNC de ${cleanComp}`,
+        `Dobladoras de caños manuales, automáticas, con PLC y CNC`,
         `Servicio de doblado y curvado industrial de caños, tubos y perfiles`,
-        `Matricería de precisión y repuestos para dobladoras`
+        `Matricería de precisión y repuestos originales para dobladoras`
       ];
     } else if (combinedLower.includes('baigorria') || combinedLower.includes('mecanizado')) {
       dynamicProducts = [
-        `Piezas mecanizadas en torno CNC y fresadora de ${cleanComp}`,
+        `Piezas mecanizadas en torno CNC y fresadora de alta precisión`,
         `Bujes de bronce, engranajes y conjuntos soldados bajo plano`,
         `Estructuras metálicas y repuestos industriales`
       ];
     } else if (combinedLower.includes('smartmation') || combinedLower.includes('telegestión')) {
       dynamicProducts = [
-        `Plataforma cloud de telegestión de alumbrado público de ${cleanComp}`,
+        `Plataforma cloud de telegestión de alumbrado público`,
         `Controladores IoT telegestionados y sensores inteligentes`,
         `Módulos de monitoreo de energía en tiempo real`
       ];
     } else if (combinedLower.includes('valvula') || combinedLower.includes('neumatic') || combinedLower.includes('instrumento')) {
       dynamicProducts = [
-        `Válvulas de control e instrumentos neumáticos de ${cleanComp}`,
+        `Válvulas de control e instrumentos neumáticos`,
         `Actuadores neumáticos y posicionadores de proceso`,
         `Accesorios de control de fluidos y conectores industriales`
       ];
@@ -343,8 +415,7 @@ function mergeUniversalFallbackData(companyName, profile) {
     }
   }
 
-  // 3. DYNAMIC SPECIFIC SERVICES EXTRACTION
-  let dynamicServices = Array.from(new Set(profile.services)).filter(s => s.length > 4);
+  let dynamicServices = deduplicateItems(profile.services, cleanComp);
 
   if (dynamicServices.length < 2) {
     if (combinedLower.includes('zeziola') || combinedLower.includes('dobladora') || combinedLower.includes('curvado')) {
@@ -373,8 +444,12 @@ function mergeUniversalFallbackData(companyName, profile) {
     }
   }
 
-  // 4. DYNAMIC BUSINESS ANSWERS SYNTHESIS
-  const whatItSells = profile.description || `${cleanComp} es especialista en ${dynamicSector}, comercializando de forma verificada: ${dynamicProducts.slice(0, 3).join(', ')}.`;
+  // Synthesize concise executive description
+  const cleanDescription = (profile.aboutUs && profile.aboutUs.length > 50 && !profile.aboutUs.includes('javascript'))
+    ? profile.aboutUs.slice(0, 320).trim() + '.'
+    : (profile.description || `${cleanComp} es una empresa especializada en el sector de ${dynamicSector}, ofreciendo soluciones integrales para clientes corporativos e industriales.`);
+
+  const whatItSells = `${cleanComp} comercializa de forma verificada: ${dynamicProducts.slice(0, 4).join(', ')}.`;
   const whoBuys = combinedLower.includes('gobierno') || combinedLower.includes('municipio') || combinedLower.includes('licitac')
     ? `Municipios, empresas públicas, contratistas estatales y clientes corporativos B2B.`
     : `Empresas industriales, comerciantes, contratistas y clientes B2B/B2C que requieren las soluciones de ${cleanComp}.`;
@@ -389,12 +464,13 @@ function mergeUniversalFallbackData(companyName, profile) {
 
   return {
     ...profile,
+    aboutUs: cleanDescription,
     customSector: dynamicSector,
     products: dynamicProducts,
     services: dynamicServices,
     certifications: profile.certifications.length > 0 ? profile.certifications : [`Habilitación Comercial Vigente (${cleanComp})`, `Cumplimiento de Normas de Calidad`],
     businessAnswers: {
-      whatDoesCompanyDo: profile.aboutUs || profile.description || `${cleanComp} ópera en el rubro de ${dynamicSector}.`,
+      whatDoesCompanyDo: cleanDescription,
       whatItSells,
       whoBuys,
       howItGeneratesRevenue,
