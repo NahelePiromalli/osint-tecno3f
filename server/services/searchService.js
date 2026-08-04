@@ -30,9 +30,29 @@ export async function searchCompanyOSINT(companyName, domain = '', region = 'AR'
     'Accept-Language': 'es-ES,es;q=0.9,en;q=0.8'
   };
 
+  const cleanTargetHost = domain
+    ? domain.replace(/^https?:\/\//i, '').replace(/\/.*$/, '').replace(/^www\./i, '').toLowerCase()
+    : '';
+
+  const isMatchingDomain = (linkUrl) => {
+    if (!cleanTargetHost) return true;
+    if (!linkUrl || linkUrl === '#') return true;
+    try {
+      const parsedHost = new URL(linkUrl.startsWith('http') ? linkUrl : `https://${linkUrl}`).hostname.replace(/^www\./i, '').toLowerCase();
+      // Allow exact domain, subdomains, official gazette, or compr.ar
+      if (parsedHost === cleanTargetHost || parsedHost.endsWith(`.${cleanTargetHost}`) || parsedHost.includes('boletinoficial') || parsedHost.includes('comprar.gob.ar')) {
+        return true;
+      }
+      return false;
+    } catch (e) {
+      return true;
+    }
+  };
+
   try {
-    // 1. DuckDuckGo Scrape for Business Overview & Projects
-    const ddgUrl = `https://html.duckduckgo.com/html/?q=${encodeURIComponent(searchQueries.general)}`;
+    // 1. DuckDuckGo Scrape for Business Overview & Projects (Targeted Search)
+    const searchQuery = cleanTargetHost ? `site:${cleanTargetHost} OR "${companyName}"` : searchQueries.general;
+    const ddgUrl = `https://html.duckduckgo.com/html/?q=${encodeURIComponent(searchQuery)}`;
     const ddgResponse = await axios.get(ddgUrl, { headers, timeout: 5000 }).catch(() => null);
 
     if (ddgResponse && ddgResponse.data) {
@@ -42,12 +62,13 @@ export async function searchCompanyOSINT(companyName, domain = '', region = 'AR'
         const title = $(el).find('.result__title').text().trim();
         const snippet = $(el).find('.result__snippet').text().trim();
         const link = $(el).find('.result__url').attr('href') || $(el).find('.result__title a').attr('href');
+        const formattedLink = link ? (link.startsWith('//') ? `https:${link}` : link) : '#';
 
-        if (title && snippet) {
+        if (title && snippet && isMatchingDomain(formattedLink)) {
           results.overviewSnippets.push({
             title,
             snippet,
-            link: link ? (link.startsWith('//') ? `https:${link}` : link) : '#'
+            link: formattedLink
           });
 
           const lower = (title + ' ' + snippet).toLowerCase();
@@ -55,7 +76,7 @@ export async function searchCompanyOSINT(companyName, domain = '', region = 'AR'
             results.projectsAndGroups.push({
               title,
               description: snippet,
-              link: link ? (link.startsWith('//') ? `https:${link}` : link) : '#'
+              link: formattedLink
             });
           }
         }

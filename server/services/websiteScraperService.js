@@ -160,10 +160,11 @@ function mergeUniversalFallbackData(companyName, profile) {
       dynamicSector = 'Industria Metalúrgica, Tornería CNC & Piezas Mecanizadas';
     } else if (combinedLower.includes('smartmation') || combinedLower.includes('telegestión') || combinedLower.includes('iot') || combinedLower.includes('alumbrado')) {
       dynamicSector = 'Sistemas de Telegestión Cloud e IoT para Ciudades Inteligentes';
-    } else if (combinedLower.includes('bomba') || combinedLower.includes('presurizadora') || combinedLower.includes('electrobomba')) {
-      dynamicSector = 'Fabricación e Importación de Bombas Eléctricas e Industriales';
-    } else if (combinedLower.includes('frio') || combinedLower.includes('refrigeracion') || combinedLower.includes('gondola') || combinedLower.includes('epta')) {
+    } else if (combinedLower.includes('valvula') || combinedLower.includes('neumatic') || combinedLower.includes('instrumento')) {
+      dynamicSector = 'Válvulas, Instrumentos Neumáticos de Control & Accesorios Industriales';
+    } else if (combinedLower.includes('frio') || combinedLower.includes('refrigeracion') || combinedLower.includes('gondola')) {
       dynamicSector = 'Equipamiento de Refrigeración Comercial & Muebles de Frío';
+    } else if (combinedLower.includes('bomba') || combinedLower.includes('presurizadora') || combinedLower.includes('electrobomba')) {
     } else if (combinedLower.includes('software') || combinedLower.includes('tech') || combinedLower.includes('cloud') || combinedLower.includes('app')) {
       dynamicSector = 'Desarrollo de Software, Cloud & Soluciones Digitales';
     } else if (combinedLower.includes('salud') || combinedLower.includes('medica') || combinedLower.includes('farmac')) {
@@ -199,7 +200,13 @@ function mergeUniversalFallbackData(companyName, profile) {
         `Controladores IoT telegestionados y sensores inteligentes`,
         `Módulos de monitoreo de energía en tiempo real`
       ];
-    } else if (combinedLower.includes('frio') || combinedLower.includes('refrigeracion') || combinedLower.includes('epta')) {
+    } else if (combinedLower.includes('valvula') || combinedLower.includes('neumatic') || combinedLower.includes('instrumento')) {
+      dynamicProducts = [
+        `Válvulas de control e instrumentos neumáticos de ${cleanComp}`,
+        `Actuadores neumáticos y posicionadores de proceso`,
+        `Accesorios de control de fluidos y conectores industriales`
+      ];
+    } else if (combinedLower.includes('frio') || combinedLower.includes('refrigeracion')) {
       dynamicProducts = [
         `Muebles y góndolas de refrigeración comercial para supermercados`,
         `Centrales de frío industrial y cámaras frigoríficas`,

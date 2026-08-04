@@ -50,7 +50,8 @@ DIRECTIVAS STRICT-RAG (ZERO HALLUCINATION):
 2. NUNCA menciones empresas ajenas, ni uses descripciones de plantilla.
 3. Si un dato no se encuentra en el texto proporcionado, responde exactamente "Información no verificada públicamente".
 4. Toda afirmación debe estar 100% justificada por el texto escaneado de "${cleanComp}".
-5. Responde EXCLUSIVAMENTE en formato JSON válido según la estructura dada.
+5. ISOLACIÓN ESTRICTA DE DOMINIO: El análisis pertenece 100% al dominio escaneado "${website}". Queda estrictamente PROHIBIDO confundir o incluir datos de empresas homónimas de otros dominios (ej: no confundir epta.com.ar con epta-latam.com).
+6. Responde EXCLUSIVAMENTE en formato JSON válido según la estructura dada.
 
 ESTRUCTURA JSON REQUERIDA:
 {
