@@ -11,6 +11,7 @@ import { analyzeLegalOSINT } from './services/legalOsintService.js';
 import { analyzePublicContracts } from './services/publicContractsService.js';
 import { generateSwotAnalysis } from './services/swotAnalysisService.js';
 import { analyzeDigitalTransformation } from './services/digitalTransformationService.js';
+import { analyzeCompanyWithGemini } from './services/aiExtractionService.js';
 import { registerUserInDB, authenticateUserInDB } from './database.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -108,7 +109,32 @@ app.post('/api/osint/scan', async (req, res) => {
     // 9. Digital Transformation Analysis
     const digitalTransformation = analyzeDigitalTransformation(companyName, scrapedData, searchData);
 
+    // 10. Gemini AI RAG Synthesis (Strict Company-Specific Analysis)
+    const aiResult = await analyzeCompanyWithGemini(companyName, scrapedData, searchData);
 
+    if (aiResult) {
+      if (aiResult.sector && aiResult.sector !== 'Información no verificada públicamente') {
+        categorization.sector = aiResult.sector;
+      }
+      if (aiResult.businessModel && aiResult.businessModel !== 'Información no verificada públicamente') {
+        categorization.businessModel = aiResult.businessModel;
+      }
+      if (aiResult.companyType && aiResult.companyType !== 'Información no verificada públicamente') {
+        categorization.companyType = aiResult.companyType;
+      }
+
+      if (scrapedData.businessAnswers) {
+        if (aiResult.whatItSells) scrapedData.businessAnswers.whatItSells = aiResult.whatItSells;
+        if (aiResult.whoBuys) scrapedData.businessAnswers.whoBuys = aiResult.whoBuys;
+        if (aiResult.howItGeneratesRevenue) scrapedData.businessAnswers.howItGeneratesRevenue = aiResult.howItGeneratesRevenue;
+        if (aiResult.mostImportantAsset) scrapedData.businessAnswers.mostImportantAsset = aiResult.mostImportantAsset;
+      }
+
+      if (aiResult.strengths?.length > 0) swotAnalysis.strengths = aiResult.strengths;
+      if (aiResult.weaknesses?.length > 0) swotAnalysis.weaknesses = aiResult.weaknesses;
+      if (aiResult.opportunities?.length > 0) swotAnalysis.opportunities = aiResult.opportunities;
+      if (aiResult.threats?.length > 0) swotAnalysis.threats = aiResult.threats;
+    }
 
     // Consolidated OSINT Master Report
     const report = {
@@ -127,7 +153,8 @@ app.post('/api/osint/scan', async (req, res) => {
       searchData,
       supportPlan,
       swotAnalysis,
-      digitalTransformation
+      digitalTransformation,
+      executiveSummary: aiResult?.executiveSummary || null
     };
 
     console.log(`[OSINT SCAN COMPLETE] Report ID: ${report.id} generated for "${companyName}"`);
