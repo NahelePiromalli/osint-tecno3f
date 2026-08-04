@@ -19,8 +19,8 @@ export function categorizeCompany(companyName, scrapedData = {}, searchResults =
   let sector = 'Servicios Generales & Comercio';
   let sectorIcon = 'briefcase';
 
-  if (matchAny(combinedText, ['metal', 'taller', 'torneria', 'industrial', 'maquinaria', 'construccion', 'obra', 'fabrica', 'manufactura', 'herreria', 'caldereria'])) {
-    sector = 'Industria Metalúrgica & Manufactura';
+  if (matchAny(combinedText, ['zeziola', 'dobladora', 'curvado', 'caño', 'tubo', 'perfil', 'matriceria', 'metal', 'taller', 'torneria', 'industrial', 'maquinaria', 'construccion', 'obra', 'fabrica', 'manufactura', 'herreria', 'caldereria'])) {
+    sector = combinedText.includes('dobladora') || combinedText.includes('curvado') || combinedText.includes('caño') || combinedText.includes('zeziola') ? 'Industria Metalúrgica & Curvado de Caños' : 'Industria Metalúrgica & Manufactura';
     sectorIcon = 'box';
   } else if (matchAny(combinedText, ['tech', 'software', 'app', 'digital', 'cloud', 'ia', 'ai', 'sistemas', 'data', 'ciberseguridad'])) {
     sector = 'Tecnología & Software';

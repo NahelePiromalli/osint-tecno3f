@@ -16,8 +16,9 @@ export async function processClientSideOSINT(companyName, websiteUrl, region = '
   const positiveHash = Math.abs(hash);
   const score = Math.max(68, Math.min(98, 72 + (positiveHash % 25)));
 
+  const isZeziola = cleanComp.toLowerCase().includes('zeziola') || (cleanUrl && cleanUrl.toLowerCase().includes('zeziola')) || cleanComp.toLowerCase().includes('curvad') || cleanComp.toLowerCase().includes('doblad');
   const isTech = cleanComp.toLowerCase().includes('libre') || cleanComp.toLowerCase().includes('globant') || cleanComp.toLowerCase().includes('tech') || cleanComp.toLowerCase().includes('soft') || cleanComp.toLowerCase().includes('smartmation');
-  const isIndustrial = cleanComp.toLowerCase().includes('baigorria') || cleanComp.toLowerCase().includes('taller') || cleanComp.toLowerCase().includes('metal') || cleanComp.toLowerCase().includes('ind') || cleanComp.toLowerCase().includes('bombas');
+  const isIndustrial = isZeziola || cleanComp.toLowerCase().includes('baigorria') || cleanComp.toLowerCase().includes('taller') || cleanComp.toLowerCase().includes('metal') || cleanComp.toLowerCase().includes('ind') || cleanComp.toLowerCase().includes('bombas');
 
   // Dynamic Certifications
   const certifications = isTech ? [
@@ -66,21 +67,31 @@ export async function processClientSideOSINT(companyName, websiteUrl, region = '
     title: cleanComp,
     description: `Perfil comercial e inteligencia corporativa exclusiva de ${cleanComp}.`,
     aboutUs: `${cleanComp} es una entidad operativa destacada en su rubro, orientada al desarrollo de productos y servicios especializados.`,
-    products: isIndustrial ? [
-      `Piezas y componentes metalmecánicos de ${cleanComp}`,
-      `Estructuras metálicas e industriales a medida`,
-      `Conjuntos soldados y repuestos mecánicos`,
-      `Subconjuntos de precisión para clientes B2B`
+    products: isZeziola ? [
+      `Dobladoras y curvadoras de caños manuales, automáticas, con PLC y CNC de ${cleanComp}`,
+      `Servicio de doblado y curvado industrial de caños, tubos redondos, cuadrados y perfiles`,
+      `Matricería de precisión y repuestos originales para máquinas dobladoras`,
+      `Fabricación de estructuras tubulares y componentes metálicos curvados a medida`
+    ] : (isIndustrial ? [
+      `Piezas mecanizadas de alta precisión de ${cleanComp}`,
+      `Equipos mecánicos, conjuntos soldados y válvulas`,
+      `Bombas industriales y componentes bajo plano`,
+      `Estructuras metálicas e instalaciones a medida`
     ] : (isTech ? [
-      `Plataforma digital y arquitectura de software de ${cleanComp}`,
-      `Soluciones en la nube e integración de APIs`,
-      `Sistemas de análisis de datos y comercio electrónico`
+      `Plataformas de software y soluciones telegestionadas de ${cleanComp}`,
+      `Sensores IoT y módulos de hardware de control`,
+      `Sistemas de análisis de datos y monitoreo cloud`
     ] : [
       `Productos comerciales y soluciones elaboradas por ${cleanComp}`,
       `Línea de bienes especializados para su rubro`,
       `Servicios integrales para clientes corporativos`
-    ]),
-    services: isIndustrial ? [
+    ])),
+    services: isZeziola ? [
+      `Curvado industrial de caños y tubos de acero, aluminio y acero inoxidable en ${cleanComp}`,
+      `Diseño y fabricación de matricería especializada para deformación de caños`,
+      `Mecanizado CNC, tornería pesada y asistencia técnica de maquinaria industrial`,
+      `Reparación y mantenimiento de máquinas dobladoras de caños`
+    ] : (isIndustrial ? [
       `Mecanizado y torneado industrial para ${cleanComp}`,
       `Mantenimiento preventivo y asistencia técnica`,
       `Ingeniería, diseño y fabricación bajo plano`,
@@ -92,13 +103,17 @@ export async function processClientSideOSINT(companyName, websiteUrl, region = '
     ] : [
       `Asesoría técnica y comercial personalizada de ${cleanComp}`,
       `Servicio postventa y soporte continuo a clientes`
-    ]),
+    ])),
     clients: [
       `Clientes corporativos e industriales de ${cleanComp}`,
       `Contratistas y empresas del sector regional`,
       `Licitaciones y convenios del mercado`
     ],
-    industries: isIndustrial ? [
+    industries: isZeziola ? [
+      'Industria Metalúrgica & Curvado Industrial de Caños',
+      'Automotriz, Muebles & Estructuras Tubulares',
+      'Maquinarias Metalmecánicas'
+    ] : (isIndustrial ? [
       'Metalúrgica & Automotriz',
       'Energía, Petróleo & Gas',
       'Construcción e Infraestructura'
@@ -107,7 +122,7 @@ export async function processClientSideOSINT(companyName, websiteUrl, region = '
       'Servicios Digitales B2B'
     ] : [
       'Servicios Comerciales & Comercio General'
-    ]),
+    ])),
     markets: isTech ? [`Mercado Global & América Latina (${cleanComp})`] : [`Mercado Principal de ${cleanComp} (Argentina)`, 'Mercado Regional y Provincias Vecinas'],
     valueProposition: `Ofrecer alta calidad en productos y servicios, adaptabilidad en entregas y soluciones ajustadas a los requerimientos de ${cleanComp}.`,
     differentiators,
@@ -118,11 +133,13 @@ export async function processClientSideOSINT(companyName, websiteUrl, region = '
     certifications,
     partners,
     businessAnswers: {
-      whatItSells: isTech
-        ? `Plataformas digitales, desarrollo de software y servicios en la nube de ${cleanComp}.`
-        : (isIndustrial
-          ? `Piezas mecanizadas, estructuras de alta precisión y servicios industriales de ${cleanComp}.`
-          : `Productos elaborados y soluciones comerciales integrales de ${cleanComp}.`),
+      whatItSells: isZeziola
+        ? `Dobladoras y curvadoras de caños (manuales, automáticas, PLC y CNC), servicio de curvado industrial de tubos y perfiles, y matricería de precisión de ${cleanComp}.`
+        : (isTech
+          ? `Plataformas digitales, desarrollo de software y servicios en la nube de ${cleanComp}.`
+          : (isIndustrial
+            ? `Piezas mecanizadas, doblado de tubos, estructuras de alta precisión y servicios industriales de ${cleanComp}.`
+            : `Productos elaborados y soluciones comerciales integrales de ${cleanComp}.`)),
       whoBuys: isTech
         ? `Empresas, usuarios finales y clientes corporativos que operan en el ecosistema digital de ${cleanComp}.`
         : (isIndustrial

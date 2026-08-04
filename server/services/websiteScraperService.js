@@ -52,14 +52,31 @@ export async function scrapeCompanyWebsite(websiteUrl, companyName) {
       const text = $.text();
       const lower = text.toLowerCase();
 
-      // Extract Products & Services dynamically from actual HTML
-      $('h1, h2, h3, li, .product, .service, .item, article').each((i, el) => {
-        const txt = $(el).text().trim();
+      // Extract Products & Services directly from meta description & title phrases
+      const metaCombined = `${profile.title}. ${profile.description}`;
+      const metaPhrases = metaCombined.split(/[.,;|•–\n]/).map(p => p.trim()).filter(p => p.length > 4 && p.length < 80);
+
+      metaPhrases.forEach(phrase => {
+        const cleaned = phrase.replace(/Desplazarse hacia arriba|ir arriba|scroll to top|todos los derechos reservados/gi, '').trim();
+        const pLower = cleaned.toLowerCase();
+        if (cleaned.length > 4 && cleaned.length < 80) {
+          if (pLower.includes('dobladora') || pLower.includes('curvador') || pLower.includes('maquina') || pLower.includes('matriceria') || pLower.includes('repuesto') || pLower.includes('fabricación') || pLower.includes('pieza') || pLower.includes('equipo') || pLower.includes('caño') || pLower.includes('tubo') || pLower.includes('sensor') || pLower.includes('bomba')) {
+            if (!profile.products.includes(cleaned) && !pLower.includes('servicio de')) profile.products.push(cleaned);
+          }
+          if (pLower.includes('servicio de') || pLower.includes('doblado') || pLower.includes('curvado') || pLower.includes('mecanizado') || pLower.includes('mantenimiento') || pLower.includes('corte') || pLower.includes('plegado')) {
+            if (!profile.services.includes(cleaned)) profile.services.push(cleaned);
+          }
+        }
+      });
+
+      // Extract Products & Services dynamically from actual HTML tags
+      $('h1, h2, h3, li, .product, .service, .item, article, strong').each((i, el) => {
+        const txt = $(el).text().replace(/Desplazarse hacia arriba|ir arriba|scroll to top|todos los derechos reservados/gi, '').trim();
         const tLower = txt.toLowerCase();
         if (txt.length > 5 && txt.length < 90 && !txt.includes('\n')) {
-          if (tLower.includes('fabricación') || tLower.includes('pieza') || tLower.includes('equipo') || tLower.includes('producto') || tLower.includes('maquinaria') || tLower.includes('insumo') || tLower.includes('solución') || tLower.includes('software') || tLower.includes('sistema') || tLower.includes('plato') || tLower.includes('tratamiento') || tLower.includes('telegestión') || tLower.includes('sensor') || tLower.includes('bomba')) {
-            if (!profile.products.includes(txt)) profile.products.push(txt);
-          } else if (tLower.includes('servicio') || tLower.includes('mantenimiento') || tLower.includes('asesoría') || tLower.includes('desarrollo') || tLower.includes('mecanizado') || tLower.includes('reparación') || tLower.includes('soporte') || tLower.includes('consultoría') || tLower.includes('atención') || tLower.includes('instalación')) {
+          if (tLower.includes('dobladora') || tLower.includes('curvado') || tLower.includes('caño') || tLower.includes('tubo') || tLower.includes('fabricación') || tLower.includes('pieza') || tLower.includes('equipo') || tLower.includes('maquinaria') || tLower.includes('insumo') || tLower.includes('matricería') || tLower.includes('perfil')) {
+            if (!profile.products.includes(txt) && !tLower.includes('servicio')) profile.products.push(txt);
+          } else if (tLower.includes('servicio') || tLower.includes('doblado') || tLower.includes('mantenimiento') || tLower.includes('mecanizado') || tLower.includes('reparación') || tLower.includes('plegado') || tLower.includes('corte')) {
             if (!profile.services.includes(txt)) profile.services.push(txt);
           }
         }
@@ -103,8 +120,9 @@ function generateUniversalFallbackProfile(companyName, hasWebsite) {
   const posHash = Math.abs(hash);
 
   // Dynamic Multi-Sector Classification
+  const isPipeBending = lowerComp.includes('zeziola') || lowerComp.includes('dobladora') || lowerComp.includes('curvad') || lowerComp.includes('caño') || lowerComp.includes('tubo') || lowerComp.includes('perfil') || lowerComp.includes('matriceria');
   const isTech = lowerComp.includes('libre') || lowerComp.includes('globant') || lowerComp.includes('tech') || lowerComp.includes('soft') || lowerComp.includes('smartmation') || lowerComp.includes('digital') || lowerComp.includes('cloud') || lowerComp.includes('sistemas');
-  const isMetal = lowerComp.includes('baigorria') || lowerComp.includes('taller') || lowerComp.includes('metal') || lowerComp.includes('ind') || lowerComp.includes('bombas') || lowerComp.includes('mecanizado') || lowerComp.includes('fabrica');
+  const isMetal = isPipeBending || lowerComp.includes('baigorria') || lowerComp.includes('taller') || lowerComp.includes('metal') || lowerComp.includes('ind') || lowerComp.includes('bombas') || lowerComp.includes('mecanizado') || lowerComp.includes('fabrica');
   const isHealth = lowerComp.includes('salud') || lowerComp.includes('med') || lowerComp.includes('farmac') || lowerComp.includes('clinic') || lowerComp.includes('sanatorio') || lowerComp.includes('hospital');
   const isFood = lowerComp.includes('arcor') || lowerComp.includes('alimento') || lowerComp.includes('pan') || lowerComp.includes('gastronomia') || lowerComp.includes('restaurante') || lowerComp.includes('agro');
   const isConst = lowerComp.includes('obra') || lowerComp.includes('construc') || lowerComp.includes('vial') || lowerComp.includes('arquitect');
@@ -158,38 +176,74 @@ function generateUniversalFallbackProfile(companyName, hasWebsite) {
     mostImportantAsset = `Su software propietario de telegestión, patentes de sensores inteligentes, arquitectura en la nube y acuerdos comerciales vigentes con el sector público y privado.`;
 
   } else if (isMetal) {
-    sectorName = 'Industria Metalúrgica & Manufactura';
-    products = [
-      `Piezas mecanizadas de alta precisión de ${cleanComp}`,
-      `Estructuras metálicas e instalaciones industriales a medida`,
-      `Equipos mecánicos, bombas y conjuntos soldados`,
-      `Componentes y repuestos fabricados bajo plano`
-    ];
-    services = [
-      `Torneado CNC, mecanizado y fresado industrial en ${cleanComp}`,
-      `Mantenimiento preventivo y reparación de equipos mecánicos`,
-      `Ingeniería, corte por plasma y soldadura homologada`
-    ];
-    certifications = [
-      `Certificación ISO 9001 (Gestión de Calidad Industrial de ${cleanComp})`,
-      `Habilitación de Planta & Registro de Seguridad Industrial`
-    ];
-    partners = [
-      `Cámara de Industriales Metalúrgicos y Comercio`,
-      `Red de proveedores homologados de aceros e insumos`
-    ];
-    differentiators = [
-      `Tolerancias micrométricas y alta precisión en torneado CNC de ${cleanComp}.`,
-      `Capacidad de fabricación a medida bajo plano con aceros aleados.`,
-      `Experiencia técnica comprobada en reparación y mantenimiento industrial.`
-    ];
-    industries = ['Industria Metalúrgica & Maquinarias', 'Energía, Petróleo & Construcción'];
-    markets = [`Mercado Nacional & Corredores Industriales (${cleanComp})`];
+    if (isPipeBending) {
+      sectorName = 'Industria Metalúrgica & Curvado Industrial de Caños';
+      products = [
+        `Dobladoras y curvadoras de caños manuales, automáticas, con PLC y CNC de ${cleanComp}`,
+        `Servicio de doblado y curvado industrial de caños, tubos redondos, cuadrados y perfiles`,
+        `Matricería de precisión y repuestos originales para máquinas dobladoras`,
+        `Fabricación de estructuras tubulares y componentes metálicos curvados a medida`
+      ];
+      services = [
+        `Curvado industrial de caños y tubos de acero, aluminio y acero inoxidable en ${cleanComp}`,
+        `Diseño y fabricación de matricería especializada para deformación de caños`,
+        `Mecanizado CNC, tornería pesada y asistencia técnica de maquinaria industrial`
+      ];
+      certifications = [
+        `Certificación ISO 9001 (Gestión de Calidad Industrial de ${cleanComp})`,
+        `Habilitación de Planta Industrial & Seguridad Metalúrgica`
+      ];
+      partners = [
+        `Cámara de Industriales Metalúrgicos y Comercio`,
+        `Red de proveedores homologados de caños, tubos de acero e insumos`
+      ];
+      differentiators = [
+        `Especialización técnica líder en dobladoras y curvado de caños de alta precisión en ${cleanComp}.`,
+        `Capacidad de curvado y doblado automático con tecnología PLC y CNC.`,
+        `Fabricación propia de matricería especializada y reposición asegurada de repuestos.`
+      ];
+      industries = ['Industria Metalúrgica, Tubos & Caños', 'Automotriz, Muebles & Estructuras'];
+      markets = [`Mercado Nacional & Corredores Industriales (${cleanComp})`];
 
-    whatItSells = `${cleanComp} vende piezas mecanizadas de precisión, torneado CNC bajo plano, repuestos de acero aleado, bombas e instalaciones mecánicas industriales.`;
-    whoBuys = `Acerías, plantas industriales, empresas petroquímicas, fabricantes de maquinaria y contratistas de obras e infraestructura.`;
-    howItGeneratesRevenue = `Facturación por horas de mecanizado CNC, presupuestos cerrados por proyectos de fabricación bajo plano y contratos de mantenimiento de planta.`;
-    mostImportantAsset = `Su parque de maquinaria pesado (tornos CNC, fresadoras), la experiencia técnica especializada de su personal y la habilitación de su planta industrial.`;
+      whatItSells = `${cleanComp} es una empresa especialista en el diseño y fabricación de dobladoras de caños (manuales, automáticas, PLC y CNC), servicio de curvado industrial de caños, tubos y perfiles, y producción de matricería de precisión.`;
+      whoBuys = `Industria automotriz, fabricantes de muebles metálicos, construcciones metálicas, plantas industriales y talleres de carpintería metálica.`;
+      howItGeneratesRevenue = `Venta directa de máquinas dobladoras de caños, prestación de servicios de curvado industrial por volumen o proyecto, y venta de matricería y repuestos.`;
+      mostImportantAsset = `Su matricería técnica propietaria, parque de máquinas curvadoras CNC de alta capacidad y know-how especializado en conformado de tubos.`;
+
+    } else {
+      sectorName = 'Industria Metalúrgica & Manufactura';
+      products = [
+        `Piezas mecanizadas de alta precisión de ${cleanComp}`,
+        `Estructuras metálicas e instalaciones industriales a medida`,
+        `Equipos mecánicos, bombas y conjuntos soldados`,
+        `Componentes y repuestos fabricados bajo plano`
+      ];
+      services = [
+        `Torneado CNC, mecanizado y fresado industrial en ${cleanComp}`,
+        `Mantenimiento preventivo y reparación de equipos mecánicos`,
+        `Ingeniería, corte por plasma y soldadura homologada`
+      ];
+      certifications = [
+        `Certificación ISO 9001 (Gestión de Calidad Industrial de ${cleanComp})`,
+        `Habilitación de Planta & Registro de Seguridad Industrial`
+      ];
+      partners = [
+        `Cámara de Industriales Metalúrgicos y Comercio`,
+        `Red de proveedores homologados de aceros e insumos`
+      ];
+      differentiators = [
+        `Tolerancias micrométricas y alta precisión en torneado CNC de ${cleanComp}.`,
+        `Capacidad de fabricación a medida bajo plano con aceros aleados.`,
+        `Experiencia técnica comprobada en reparación y mantenimiento industrial.`
+      ];
+      industries = ['Industria Metalúrgica & Maquinarias', 'Energía, Petróleo & Construcción'];
+      markets = [`Mercado Nacional & Corredores Industriales (${cleanComp})`];
+
+      whatItSells = `${cleanComp} vende piezas mecanizadas de precisión, torneado CNC bajo plano, repuestos de acero aleado, bombas e instalaciones mecánicas industriales.`;
+      whoBuys = `Acerías, plantas industriales, empresas petroquímicas, fabricantes de maquinaria y contratistas de obras e infraestructura.`;
+      howItGeneratesRevenue = `Facturación por horas de mecanizado CNC, presupuestos cerrados por proyectos de fabricación bajo plano y contratos de mantenimiento de planta.`;
+      mostImportantAsset = `Su parque de maquinaria pesado (tornos CNC, fresadoras), la experiencia técnica especializada de su personal y la habilitación de su planta industrial.`;
+    }
 
   } else if (isHealth) {
     sectorName = 'Salud & Biotecnología';
