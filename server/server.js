@@ -13,6 +13,7 @@ import { generateSwotAnalysis } from './services/swotAnalysisService.js';
 import { analyzeDigitalTransformation } from './services/digitalTransformationService.js';
 import { analyzeCompanyWithGemini } from './services/aiExtractionService.js';
 import { compareCompaniesOSINT } from './services/compareService.js';
+import { answerOsintChat } from './services/aiChatService.js';
 import { registerUserInDB, authenticateUserInDB } from './database.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -202,6 +203,24 @@ app.post('/api/osint/compare', async (req, res) => {
   } catch (error) {
     console.error('OSINT Compare Error:', error);
     return res.status(500).json({ error: 'Error al procesar la comparación.', details: error.message });
+  }
+});
+
+// OSINT Interactive Chat Endpoint
+app.post('/api/osint/chat', async (req, res) => {
+  try {
+    const { report, userQuery, chatHistory } = req.body;
+
+    if (!userQuery || !userQuery.trim()) {
+      return res.status(400).json({ error: 'Ingresa una pregunta.' });
+    }
+
+    const chatResponse = await answerOsintChat(report, userQuery, chatHistory || []);
+    return res.json(chatResponse);
+
+  } catch (error) {
+    console.error('OSINT Chat Error:', error);
+    return res.status(500).json({ error: 'Error en el asistente conversacional.', details: error.message });
   }
 });
 

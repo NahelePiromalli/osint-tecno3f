@@ -14,6 +14,7 @@ import NewsTab from './components/NewsTab';
 import SupportTab from './components/SupportTab';
 import HistoryTab from './components/HistoryTab';
 import CompareTab from './components/CompareTab';
+import OsintChatbot from './components/OsintChatbot';
 import { processClientSideOSINT } from './services/clientOsintEngine';
 import { LayoutDashboard, Briefcase, HelpCircle, Target, Scale, Landmark, Newspaper, HeartHandshake, History, AlertCircle, Layers, FileCheck, RefreshCw, Cpu } from 'lucide-react';
 
@@ -388,6 +389,9 @@ export default function App() {
             )}
           </div>
         )}
+
+        {/* Floating Interactive RAG AI Chatbot */}
+        <OsintChatbot currentReport={report} />
       </div>
     </ErrorBoundary>
   );
