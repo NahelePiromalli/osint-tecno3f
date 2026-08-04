@@ -243,56 +243,54 @@ export default function App() {
   const totalRecs = report?.supportPlan?.totalRecommendations || 0;
 
   return (
-    <div className="app-container">
-      <Header
-        currentReport={report}
-        onReset={handleReset}
-        user={user}
-        onLogin={handleLogin}
-        onLogout={handleLogout}
-        onOpenHistory={handleOpenHistory}
-        historyCount={history.length}
-      />
+    <ErrorBoundary>
+      <div className="app-container">
+        <Header
+          currentReport={report}
+          onReset={handleReset}
+          user={user}
+          onLogin={handleLogin}
+          onLogout={handleLogout}
+          onOpenHistory={handleOpenHistory}
+          historyCount={history.length}
+        />
 
-      <SearchForm
-        onScan={handleScan}
-        onCompare={handleCompare}
-        loading={loading}
-        user={user}
-        onOpenHistory={handleOpenHistory}
-        historyCount={history.length}
-      />
+        <SearchForm
+          onScan={handleScan}
+          onCompare={handleCompare}
+          loading={loading}
+          user={user}
+          onOpenHistory={handleOpenHistory}
+          historyCount={history.length}
+        />
 
-      {error && (
-        <div style={{ padding: '16px', borderRadius: '12px', background: 'rgba(244, 63, 94, 0.12)', border: '1px solid rgba(244, 63, 94, 0.3)', color: '#fecdd3', marginBottom: '28px', display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <AlertCircle size={20} style={{ color: 'var(--accent-rose)', flexShrink: 0 }} />
-          <span style={{ fontSize: '0.92rem', fontWeight: 500 }}>{error}</span>
-        </div>
-      )}
-
-      {loading && (
-        <div className="saas-card loading-box">
-          <div className="spinner"></div>
-          <div>
-            <h3 style={{ fontSize: '1.25rem', fontWeight: 700 }}>Procesando Análisis OSINT Tecno3F...</h3>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginTop: '6px' }}>
-              Extrayendo datos de la empresa, analizando modelo de negocio, matriz FODA, transformación digital y situación impositiva.
-            </p>
+        {error && (
+          <div style={{ padding: '16px', borderRadius: '12px', background: 'rgba(244, 63, 94, 0.12)', border: '1px solid rgba(244, 63, 94, 0.3)', color: '#fecdd3', marginBottom: '28px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <AlertCircle size={20} style={{ color: 'var(--accent-rose)', flexShrink: 0 }} />
+            <span style={{ fontSize: '0.92rem', fontWeight: 500 }}>{error}</span>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Benchmarking Comparison View */}
-      {!loading && comparisonReport && !showHistoryOnly && (
-        <ErrorBoundary>
+        {loading && (
+          <div className="saas-card loading-box">
+            <div className="spinner"></div>
+            <div>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 700 }}>Procesando Análisis OSINT Tecno3F...</h3>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginTop: '6px' }}>
+                Extrayendo datos de la empresa, analizando modelo de negocio, matriz FODA, transformación digital y situación impositiva.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Benchmarking Comparison View */}
+        {!loading && comparisonReport && !showHistoryOnly && (
           <div>
             <CompareTab reportA={comparisonReport.reportA} reportB={comparisonReport.reportB} />
           </div>
-        </ErrorBoundary>
-      )}
+        )}
 
-      {!loading && report && !comparisonReport && !showHistoryOnly && (
-        <ErrorBoundary>
+        {!loading && report && !comparisonReport && !showHistoryOnly && (
           <div>
             {/* Navigation Tabs Navbar */}
             <nav className="tab-navbar">
@@ -348,49 +346,49 @@ export default function App() {
             {activeTab === 'support' && <SupportTab supportPlan={report.supportPlan || {}} companyName={companyName} />}
             {user && activeTab === 'history' && <HistoryTab history={history} onLoadReport={(rep) => { setReport(rep); setActiveTab('overview'); }} onClearHistory={handleClearHistory} />}
           </div>
-        </ErrorBoundary>
-      )}
+        )}
 
-      {!loading && (showHistoryOnly || (!report && !comparisonReport)) && (
-        <div>
-          {showHistoryOnly && user ? (
-            <div>
-              <div style={{ marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <h3 style={{ fontSize: '1.2rem', fontWeight: 800 }}>Historial de Búsquedas de {user.username || user.name}</h3>
-                <button className="btn-secondary" onClick={() => setShowHistoryOnly(false)}>
-                  Volver al Inicio
-                </button>
-              </div>
-              <HistoryTab
-                history={history}
-                onLoadReport={(rep) => {
-                  setReport(rep);
-                  setActiveTab('overview');
-                  setShowHistoryOnly(false);
-                }}
-                onClearHistory={handleClearHistory}
-              />
-            </div>
-          ) : (
-            <div className="saas-card" style={{ padding: '54px 28px', textAlign: 'center' }}>
-              <div style={{ width: '64px', height: '64px', borderRadius: '18px', background: 'rgba(139, 92, 246, 0.15)', border: '1px solid rgba(139, 92, 246, 0.3)', color: '#c4b5fd', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px auto' }}>
-                <Layers size={32} style={{ margin: 'auto' }} />
-              </div>
-              <h2 style={{ fontSize: '1.5rem', fontWeight: 800 }}>Plataforma OSINT Tecno3F de Inteligencia Empresarial</h2>
-              <p style={{ color: 'var(--text-secondary)', maxWidth: '680px', margin: '12px auto 28px auto', fontSize: '0.96rem', lineHeight: '1.6' }}>
-                Ingresa el nombre de cualquier empresa y su sitio web para realizar un diagnóstico completo: matriz FODA, índice de transformación digital, modelo de negocio, juicios, compras del Estado y situación impositiva.
-              </p>
-              <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', flexWrap: 'wrap' }}>
-                {user && (
-                  <button className="btn-secondary" onClick={handleOpenHistory} style={{ borderColor: 'rgba(37, 99, 235, 0.4)', color: '#60a5fa' }}>
-                    <History size={16} /> Ver mi historial ({history.length})
+        {!loading && (showHistoryOnly || (!report && !comparisonReport)) && (
+          <div>
+            {showHistoryOnly && user ? (
+              <div>
+                <div style={{ marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <h3 style={{ fontSize: '1.2rem', fontWeight: 800 }}>Historial de Búsquedas de {user.username || user.name}</h3>
+                  <button className="btn-secondary" onClick={() => setShowHistoryOnly(false)}>
+                    Volver al Inicio
                   </button>
-                )}
+                </div>
+                <HistoryTab
+                  history={history}
+                  onLoadReport={(rep) => {
+                    setReport(rep);
+                    setActiveTab('overview');
+                    setShowHistoryOnly(false);
+                  }}
+                  onClearHistory={handleClearHistory}
+                />
               </div>
-            </div>
-          )}
-        </div>
-      )}
-    </div>
+            ) : (
+              <div className="saas-card" style={{ padding: '54px 28px', textAlign: 'center' }}>
+                <div style={{ width: '64px', height: '64px', borderRadius: '18px', background: 'rgba(139, 92, 246, 0.15)', border: '1px solid rgba(139, 92, 246, 0.3)', color: '#c4b5fd', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px auto' }}>
+                  <Layers size={32} style={{ margin: 'auto' }} />
+                </div>
+                <h2 style={{ fontSize: '1.5rem', fontWeight: 800 }}>Plataforma OSINT Tecno3F de Inteligencia Empresarial</h2>
+                <p style={{ color: 'var(--text-secondary)', maxWidth: '680px', margin: '12px auto 28px auto', fontSize: '0.96rem', lineHeight: '1.6' }}>
+                  Ingresa el nombre de cualquier empresa y su sitio web para realizar un diagnóstico completo: matriz FODA, índice de transformación digital, modelo de negocio, juicios, compras del Estado y situación impositiva.
+                </p>
+                <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', flexWrap: 'wrap' }}>
+                  {user && (
+                    <button className="btn-secondary" onClick={handleOpenHistory} style={{ borderColor: 'rgba(37, 99, 235, 0.4)', color: '#60a5fa' }}>
+                      <History size={16} /> Ver mi historial ({history.length})
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </ErrorBoundary>
   );
 }
