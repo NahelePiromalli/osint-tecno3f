@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Building2, Globe, MapPin, Sparkles, History } from 'lucide-react';
+import { Search, Building2, Globe, MapPin, Sparkles, History, Scale } from 'lucide-react';
 
 export default function SearchForm({ onScan, onCompare, loading, user, onOpenHistory, historyCount }) {
   const [isCompareMode, setIsCompareMode] = useState(false);
