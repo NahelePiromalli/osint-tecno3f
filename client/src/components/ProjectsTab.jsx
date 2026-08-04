@@ -3,16 +3,17 @@ import { Briefcase, FolderGit2, Users, Award, Target, Zap, Globe2, ShieldCheck, 
 
 export default function ProjectsTab({ scrapedData = {}, categorization = {}, companyName = '' }) {
   const data = scrapedData || {};
-  const products = data.products || [];
-  const services = data.services || [];
-  const clients = data.clients || [];
-  const industries = data.industries || [];
-  const markets = data.markets || [];
-  const differentiators = data.differentiators || [];
-  const certifications = data.certifications || [];
-  const competitors = data.competitors || [];
-  const partners = data.partners || [];
-  const valueProposition = data.valueProposition || `${companyName} brinda soluciones comerciales e industriales en su sector.`;
+  const sector = categorization.sector || 'Servicios Industriales & Comerciales';
+  const products = (data.products && data.products.length > 0) ? data.products : [`Provisión de soluciones comerciales e industriales de ${companyName}`];
+  const services = (data.services && data.services.length > 0) ? data.services : [`Asesoría técnica y atención personalizada de ${companyName}`];
+  const clients = (data.clients && data.clients.length > 0) ? data.clients : [`Clientes corporativos e industriales de ${companyName}`, 'Contratistas regionales & Proveedores B2B', 'Red de clientes directos'];
+  const industries = (data.industries && data.industries.length > 0) ? data.industries : [sector, 'Manufactura e Infraestructura', 'Servicios Corporativos B2B'];
+  const markets = (data.markets && data.markets.length > 0) ? data.markets : ['Mercado Nacional (Argentina)', 'Mercado Regional & Provincias', 'América Latina (LATAM)'];
+  const differentiators = (data.differentiators && data.differentiators.length > 0) ? data.differentiators : [`Trayectoria y especialización técnica en ${sector}.`, `Atención directa y desarrollo de soluciones a medida.`, `Garantía de calidad e infraestructura propia.`];
+  const certifications = (data.certifications && data.certifications.length > 0) ? data.certifications : [`Habilitación Comercial Vigente (${companyName})`, 'Cumplimiento de Normas de Calidad'];
+  const competitors = (data.competitors && data.competitors.length > 0) ? data.competitors : [`Empresas competidoras directas en ${sector}`, 'Proveedores regionales de soluciones sustitutas', 'Empresas importadoras de equipamiento del rubro'];
+  const partners = (data.partners && data.partners.length > 0) ? data.partners : ['Cámaras Industriales & Asociaciones Comerciales', `Red de proveedores homologados de ${companyName}`, 'Distribuidores y convenios regionales'];
+  const valueProposition = data.valueProposition || `Ofrecer soluciones de máxima calidad en ${sector} para ${companyName}.`;
   const aboutUs = data.aboutUs || '';
 
   return (

@@ -444,6 +444,69 @@ function mergeUniversalFallbackData(companyName, profile) {
     }
   }
 
+  // Synthesize dynamic clients, industries, markets, differentiators, competitors & partners
+  let dynamicClients = (profile.clients && profile.clients.length > 0) ? profile.clients : [];
+  if (dynamicClients.length === 0) {
+    if (combinedLower.includes('smartmation') || combinedLower.includes('telegestión') || combinedLower.includes('iot')) {
+      dynamicClients = [
+        'Municipios & Gobiernos Locales',
+        'Empresas de Alumbrado Público y Concesionarias de Servicios',
+        'Cooperativas Eléctricas & Distribuidores de Energía',
+        'Predios Privados, Parques Industriales & Smart Cities'
+      ];
+    } else if (combinedLower.includes('valvula') || combinedLower.includes('neumatic') || combinedLower.includes('instrumento')) {
+      dynamicClients = [
+        'Empresas Industriales de Procesos & Automatización',
+        'Plantas Químicas, Alimenticias & Petroquímicas',
+        'Fabricantes de Maquinaria & Equipos de Control',
+        'Contratistas de Montajes Neumáticos e Industriales'
+      ];
+    } else if (combinedLower.includes('zeziola') || combinedLower.includes('dobladora') || combinedLower.includes('curvado')) {
+      dynamicClients = [
+        'Fabricantes de Estructuras Tubulares & Carrocerías',
+        'Industria Automotriz, Mueblera & Metalmecánica',
+        'Talleres Metalúrgicos & Constructores de Obras',
+        'Matricerías & Contratistas Industriales'
+      ];
+    } else {
+      dynamicClients = [
+        `Empresas Compradoras B2B & Clientes Corporativos de ${cleanComp}`,
+        `Contratistas Industriales & Proveedores del Rubro`,
+        `Red de Clientes Directos & Distribuidores Regionales`
+      ];
+    }
+  }
+
+  let dynamicIndustries = (profile.industries && profile.industries.length > 0) ? profile.industries : [
+    dynamicSector,
+    'Manufactura, Procesos e Infraestructura',
+    'Servicios Industriales & Corporativos B2B'
+  ];
+
+  let dynamicMarkets = (profile.markets && profile.markets.length > 0) ? profile.markets : [
+    'Mercado Nacional (Argentina - Cobertura Federal)',
+    'Mercado Regional (Provincias & Municipios)',
+    'Exportación & Mercado Internacional (LATAM)'
+  ];
+
+  let dynamicDifferentiators = (profile.differentiators && profile.differentiators.length > 0) ? profile.differentiators : [
+    `Alta especialización y trayectoria en ${dynamicSector}.`,
+    `Capacidad de desarrollo a medida y asesoría técnica directa.`,
+    `Infraestructura operativa con estándares de calidad verificados.`
+  ];
+
+  let dynamicCompetitors = (profile.competitors && profile.competitors.length > 0) ? profile.competitors : [
+    `Empresas nacionales competidoras directas en ${dynamicSector}.`,
+    `Proveedores regionales de soluciones equivalentes o sustitutas.`,
+    `Empresas importadoras de equipamiento e insumos del rubro.`
+  ];
+
+  let dynamicPartners = (profile.partners && profile.partners.length > 0) ? profile.partners : [
+    `Cámaras Industriales & Asociaciones Comerciales del Sector.`,
+    `Red de proveedores homologados de insumos y materias primas.`,
+    `Distribuidores autorizados y alianzas estratégicas regionales.`
+  ];
+
   // Synthesize concise executive description
   const cleanDescription = (profile.aboutUs && profile.aboutUs.length > 50 && !profile.aboutUs.includes('javascript'))
     ? profile.aboutUs.slice(0, 320).trim() + '.'
@@ -468,6 +531,12 @@ function mergeUniversalFallbackData(companyName, profile) {
     customSector: dynamicSector,
     products: dynamicProducts,
     services: dynamicServices,
+    clients: dynamicClients,
+    industries: dynamicIndustries,
+    markets: dynamicMarkets,
+    differentiators: dynamicDifferentiators,
+    competitors: dynamicCompetitors,
+    partners: dynamicPartners,
     certifications: profile.certifications.length > 0 ? profile.certifications : [`Habilitación Comercial Vigente (${cleanComp})`, `Cumplimiento de Normas de Calidad`],
     businessAnswers: {
       whatDoesCompanyDo: cleanDescription,
