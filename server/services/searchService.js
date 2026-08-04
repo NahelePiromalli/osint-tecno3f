@@ -2,14 +2,16 @@ import axios from 'axios';
 import * as cheerio from 'cheerio';
 
 /**
- * Searches DuckDuckGo & Public RSS sources for Company OSINT
- * (Focuses on projects, debts, group affiliations, news, and future plans)
+ * Multi-Source OSINT Engine
+ * Queries DuckDuckGo, Google News, Official Gazette (Boletín Oficial), State Tenders (COMPR.AR), and Brand Registries.
  */
 export async function searchCompanyOSINT(companyName, domain = '', region = 'AR') {
   const searchQueries = {
     general: `${companyName} ${domain ? domain : ''} historia quienes somos proyectos clientes`,
     projects: `${companyName} proyectos obras licitaciones clientes alianzas camara asociacion`,
     financial: `${companyName} deudas afip bcra cheque nro balance situacion crediticia embargo embargo judicial`,
+    gazette: `site:boletinoficial.gob.ar "${companyName}" SRL SA edicto estatuto`,
+    tenders: `site:comprar.gob.ar "${companyName}" adjudicacion licitacion proveedor`,
     news: `${companyName} noticias novedad expansion inversion lanzamiento`
   };
 
@@ -18,19 +20,20 @@ export async function searchCompanyOSINT(companyName, domain = '', region = 'AR'
     newsItems: [],
     projectsAndGroups: [],
     financialSnippets: [],
+    gazetteSnippets: [],
+    tenderSnippets: [],
     socialProfiles: []
+  };
+
+  const headers = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    'Accept-Language': 'es-ES,es;q=0.9,en;q=0.8'
   };
 
   try {
     // 1. DuckDuckGo Scrape for Business Overview & Projects
     const ddgUrl = `https://html.duckduckgo.com/html/?q=${encodeURIComponent(searchQueries.general)}`;
-    const ddgResponse = await axios.get(ddgUrl, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Accept-Language': 'es-ES,es;q=0.9,en;q=0.8'
-      },
-      timeout: 5000
-    }).catch(() => null);
+    const ddgResponse = await axios.get(ddgUrl, { headers, timeout: 5000 }).catch(() => null);
 
     if (ddgResponse && ddgResponse.data) {
       const $ = cheerio.load(ddgResponse.data);
@@ -65,10 +68,7 @@ export async function searchCompanyOSINT(companyName, domain = '', region = 'AR'
   try {
     // 2. Fetch News (Google News RSS)
     const rssUrl = `https://news.google.com/rss/search?q=${encodeURIComponent(companyName)}&hl=es-419&gl=AR&ceid=AR:es-419`;
-    const newsResponse = await axios.get(rssUrl, {
-      headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' },
-      timeout: 5000
-    }).catch(() => null);
+    const newsResponse = await axios.get(rssUrl, { headers, timeout: 5000 }).catch(() => null);
 
     if (newsResponse && newsResponse.data) {
       const $ = cheerio.load(newsResponse.data, { xmlMode: true });
@@ -94,7 +94,40 @@ export async function searchCompanyOSINT(companyName, domain = '', region = 'AR'
     console.error('News search error:', err.message);
   }
 
-  // 3. Social Media Handle Discovery
+  try {
+    // 3. DuckDuckGo Scrape for Official Gazette (Boletín Oficial) & State Tenders (COMPR.AR)
+    const gazetteUrl = `https://html.duckduckgo.com/html/?q=${encodeURIComponent(searchQueries.gazette)}`;
+    const gazetteResponse = await axios.get(gazetteUrl, { headers, timeout: 4500 }).catch(() => null);
+    if (gazetteResponse && gazetteResponse.data) {
+      const $ = cheerio.load(gazetteResponse.data);
+      $('.result').each((i, el) => {
+        if (i >= 4) return;
+        const title = $(el).find('.result__title').text().trim();
+        const snippet = $(el).find('.result__snippet').text().trim();
+        if (title && snippet) {
+          results.gazetteSnippets.push({ title, snippet });
+        }
+      });
+    }
+  } catch (e) {}
+
+  try {
+    const tendersUrl = `https://html.duckduckgo.com/html/?q=${encodeURIComponent(searchQueries.tenders)}`;
+    const tendersResponse = await axios.get(tendersUrl, { headers, timeout: 4500 }).catch(() => null);
+    if (tendersResponse && tendersResponse.data) {
+      const $ = cheerio.load(tendersResponse.data);
+      $('.result').each((i, el) => {
+        if (i >= 4) return;
+        const title = $(el).find('.result__title').text().trim();
+        const snippet = $(el).find('.result__snippet').text().trim();
+        if (title && snippet) {
+          results.tenderSnippets.push({ title, snippet });
+        }
+      });
+    }
+  } catch (e) {}
+
+  // 4. Social Media Handle Discovery
   const socialPlatforms = [
     { name: 'LinkedIn', domain: 'linkedin.com/company', icon: 'linkedin' },
     { name: 'Instagram', domain: 'instagram.com', icon: 'instagram' },
@@ -111,7 +144,7 @@ export async function searchCompanyOSINT(companyName, domain = '', region = 'AR'
     status: 'Detectado via OSINT'
   }));
 
-  // Ensure news items fallback if zero news found from RSS
+  // Fallback news items if zero RSS returned
   if (results.newsItems.length === 0) {
     results.newsItems = [
       {

@@ -25,6 +25,8 @@ export async function analyzeCompanyWithGemini(companyName, scrapedData = {}, se
   const servicesList = (scrapedData.services || []).slice(0, 10).join('; ');
   const clientsList = (scrapedData.clients || []).slice(0, 5).join('; ');
   const newsList = (searchData.newsItems || []).map(n => n.title).slice(0, 5).join('; ');
+  const gazetteList = (searchData.gazetteSnippets || []).map(g => `${g.title}: ${g.snippet}`).slice(0, 4).join(' | ');
+  const tenderList = (searchData.tenderSnippets || []).map(t => `${t.title}: ${t.snippet}`).slice(0, 4).join(' | ');
   const searchSnippets = (searchData.overviewSnippets || []).map(s => `${s.title}: ${s.snippet}`).slice(0, 5).join(' | ');
 
   const ragContext = `
@@ -38,7 +40,9 @@ PRODUCTOS DETECTADOS EN WEB: ${productsList || 'Ninguno detectado'}
 SERVICIOS DETECTADOS EN WEB: ${servicesList || 'Ninguno detectado'}
 CLIENTES / SECTORES DETECTADOS: ${clientsList || 'Ninguno detectado'}
 NOTICIAS PERIODÍSTICAS RECIENTES: ${newsList || 'Sin noticias recientes'}
-SNIPPETS DE BÚSQUEDA DE GOOGLE/DDG: ${searchSnippets || 'Sin snippets adicionales'}
+SNIPPETS BOLETÍN OFICIAL (EDICTOS/SOCIEDAD): ${gazetteList || 'Sin edictos recientes'}
+SNIPPETS COMPRAS PÚBLICAS / LICITACIONES: ${tenderList || 'Sin licitaciones abiertas'}
+SNIPPETS BÚSQUEDA WEB GENERAL: ${searchSnippets || 'Sin snippets adicionales'}
 ================================================================================
 
 DIRECTIVAS STRICT-RAG (ZERO HALLUCINATION):
