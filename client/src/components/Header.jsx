@@ -36,7 +36,7 @@ export default function Header({ currentReport, onReset, user, onLogin, onLogout
       <div className="brand-wrapper">
         <div className="brand-icon-box">
           <img
-            src="/logo.png"
+            src="/tecno3f-color.png"
             alt="Tecno3F Logo"
             style={{
               width: '100%',
