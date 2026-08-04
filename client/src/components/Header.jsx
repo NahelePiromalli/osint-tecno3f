@@ -34,11 +34,17 @@ export default function Header({ currentReport, onReset, user, onLogin, onLogout
   return (
     <header className="header-nav">
       <div className="brand-wrapper">
-        <div className="brand-icon-box" style={{ background: 'transparent', border: 'none', padding: 0, width: '44px', height: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div className="brand-icon-box">
           <img
             src="/logo.png"
             alt="Tecno3F Logo"
-            style={{ width: '42px', height: '42px', objectFit: 'contain', borderRadius: '8px' }}
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'contain',
+              borderRadius: '8px',
+              filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.5))'
+            }}
             onError={(e) => { e.target.style.display = 'none'; }}
           />
         </div>
