@@ -73,38 +73,65 @@ export default function OsintChatbot({ currentReport }) {
     }
   };
 
+  const [isHovered, setIsHovered] = useState(false);
+
   if (!currentReport) return null;
 
   return (
     <>
-      {/* Floating Toggle Button */}
+      {/* Floating Toggle Button with Hover Tooltip */}
       {!isOpen && (
-        <button
-          onClick={() => setIsOpen(true)}
-          style={{
-            position: 'fixed',
-            bottom: '24px',
-            right: '24px',
-            width: '60px',
-            height: '60px',
-            borderRadius: '50%',
-            background: 'linear-gradient(135deg, #8b5cf6, #06b6d4)',
-            border: '2px solid rgba(255, 255, 255, 0.2)',
-            color: '#fff',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            boxShadow: '0 8px 30px rgba(139, 92, 246, 0.45)',
-            cursor: 'pointer',
-            zIndex: 9999,
-            transition: 'transform 0.2s ease'
-          }}
-          className="chatbot-trigger-btn"
-          title="Abrir Tecnobot3F"
+        <div
+          style={{ position: 'fixed', bottom: '24px', right: '24px', zIndex: 9999, display: 'flex', alignItems: 'center', gap: '10px' }}
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
         >
-          <Bot size={28} />
-          <span style={{ position: 'absolute', top: '2px', right: '2px', width: '14px', height: '14px', borderRadius: '50%', background: '#10b981', border: '2px solid #0b0f17' }}></span>
-        </button>
+          {isHovered && (
+            <div
+              style={{
+                background: 'rgba(15, 23, 42, 0.95)',
+                backdropFilter: 'blur(12px)',
+                border: '1px solid rgba(139, 92, 246, 0.5)',
+                color: '#fff',
+                padding: '8px 14px',
+                borderRadius: '12px',
+                fontSize: '0.86rem',
+                fontWeight: 700,
+                boxShadow: '0 8px 25px rgba(0,0,0,0.4)',
+                whiteSpace: 'nowrap',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px'
+              }}
+            >
+              <Sparkles size={14} style={{ color: 'var(--accent-amber)' }} /> Chatbot IA
+            </div>
+          )}
+
+          <button
+            onClick={() => setIsOpen(true)}
+            style={{
+              width: '60px',
+              height: '60px',
+              borderRadius: '50%',
+              background: 'linear-gradient(135deg, #8b5cf6, #06b6d4)',
+              border: '2px solid rgba(255, 255, 255, 0.2)',
+              color: '#fff',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: '0 8px 30px rgba(139, 92, 246, 0.45)',
+              cursor: 'pointer',
+              transition: 'transform 0.2s ease',
+              transform: isHovered ? 'scale(1.08)' : 'scale(1)'
+            }}
+            className="chatbot-trigger-btn"
+            title="Chatbot IA"
+          >
+            <Bot size={28} />
+            <span style={{ position: 'absolute', top: '2px', right: '2px', width: '14px', height: '14px', borderRadius: '50%', background: '#10b981', border: '2px solid #0b0f17' }}></span>
+          </button>
+        </div>
       )}
 
       {/* Floating Chat Drawer */}
