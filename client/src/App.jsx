@@ -60,6 +60,14 @@ export default function App() {
   const [user, setUser] = useState(null);
   const [history, setHistory] = useState([]);
   const [showHistoryOnly, setShowHistoryOnly] = useState(false);
+  const [theme, setTheme] = useState(() => localStorage.getItem('osint-theme') || 'dark');
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('osint-theme', theme);
+  }, [theme]);
+
+  const handleToggleTheme = () => setTheme(prev => prev === 'dark' ? 'light' : 'dark');
 
   // Load User from SessionStorage (temporary tab) or LocalStorage (persistent)
   useEffect(() => {
@@ -254,6 +262,8 @@ export default function App() {
           onLogout={handleLogout}
           onOpenHistory={handleOpenHistory}
           historyCount={history.length}
+          theme={theme}
+          onToggleTheme={handleToggleTheme}
         />
 
         <SearchForm

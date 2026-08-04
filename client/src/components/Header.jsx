@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { Download, FileText, RefreshCw } from 'lucide-react';
+import { Download, FileText, RefreshCw, Sun, Moon } from 'lucide-react';
 import { downloadFullPdfReport } from '../utils/pdfReportGenerator';
 import AuthModal from './AuthModal';
 
-export default function Header({ currentReport, onReset, user, onLogin, onLogout, onOpenHistory, historyCount }) {
+export default function Header({ currentReport, onReset, user, onLogin, onLogout, onOpenHistory, historyCount, theme, onToggleTheme }) {
   const [downloadingPdf, setDownloadingPdf] = useState(false);
 
   const handleExportJSON = () => {
@@ -77,6 +77,15 @@ export default function Header({ currentReport, onReset, user, onLogin, onLogout
             </button>
           </>
         )}
+
+        <button
+          className="btn-secondary"
+          onClick={onToggleTheme}
+          title={theme === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
+          style={{ padding: '10px 12px', minWidth: 'auto' }}
+        >
+          {theme === 'dark' ? <Sun size={17} /> : <Moon size={17} />}
+        </button>
 
         <AuthModal
           user={user}

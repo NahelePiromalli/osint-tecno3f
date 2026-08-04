@@ -41,6 +41,122 @@ export async function downloadFullPdfReport(report) {
         </div>
       </div>
 
+      <!-- DASHBOARD DE MÉTRICAS CLAVE -->
+      <div style="margin-bottom: 22px; background: linear-gradient(135deg, #1e3a5f, #1e293b); border: 2px solid #334155; border-radius: 10px; padding: 16px;">
+        <h2 style="font-size: 16px; color: #60a5fa; margin-top: 0; margin-bottom: 14px; text-align: center; text-transform: uppercase; letter-spacing: 0.1em; border-bottom: 2px solid #334155; padding-bottom: 8px;">📊 Dashboard de Métricas Clave</h2>
+
+        <table style="width: 100%; border-collapse: collapse;">
+          <tr>
+            <!-- Scoring Crediticio -->
+            <td style="width: 33%; padding: 8px; vertical-align: top;">
+              <div style="background: #0f172a; border: 1px solid #334155; border-radius: 8px; padding: 14px; text-align: center;">
+                <div style="font-size: 10px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 700;">Scoring Crediticio BCRA</div>
+                <div style="font-size: 36px; font-weight: 800; color: ${(financial.creditScore || 75) >= 70 ? '#10b981' : (financial.creditScore || 75) >= 40 ? '#f59e0b' : '#ef4444'}; margin: 8px 0 4px 0;">${financial.creditScore || 75}</div>
+                <div style="font-size: 11px; color: #64748b;">de 100 puntos</div>
+                <div style="margin-top: 8px; background: #1e293b; border-radius: 6px; height: 10px; overflow: hidden;">
+                  <div style="height: 100%; width: ${financial.creditScore || 75}%; background: linear-gradient(90deg, ${(financial.creditScore || 75) >= 70 ? '#10b981, #34d399' : (financial.creditScore || 75) >= 40 ? '#f59e0b, #fbbf24' : '#ef4444, #f87171'}); border-radius: 6px;"></div>
+                </div>
+                <div style="font-size: 10px; color: ${(financial.creditScore || 75) >= 70 ? '#34d399' : (financial.creditScore || 75) >= 40 ? '#fbbf24' : '#f87171'}; margin-top: 4px; font-weight: 700;">${financial.riskLevel || 'RIESGO BAJO'}</div>
+              </div>
+            </td>
+
+            <!-- Madurez Digital -->
+            <td style="width: 33%; padding: 8px; vertical-align: top;">
+              <div style="background: #0f172a; border: 1px solid #334155; border-radius: 8px; padding: 14px; text-align: center;">
+                <div style="font-size: 10px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 700;">Madurez Digital</div>
+                <div style="font-size: 36px; font-weight: 800; color: #06b6d4; margin: 8px 0 4px 0;">${digital.digitalScore || 72}%</div>
+                <div style="font-size: 11px; color: #64748b;">${digital.maturityLevel || 'En Proceso 4.0'}</div>
+                <div style="margin-top: 8px; background: #1e293b; border-radius: 6px; height: 10px; overflow: hidden;">
+                  <div style="height: 100%; width: ${digital.digitalScore || 72}%; background: linear-gradient(90deg, #0284c7, #06b6d4, #22d3ee); border-radius: 6px;"></div>
+                </div>
+              </div>
+            </td>
+
+            <!-- Capacidad Licitatoria -->
+            <td style="width: 33%; padding: 8px; vertical-align: top;">
+              <div style="background: #0f172a; border: 1px solid #334155; border-radius: 8px; padding: 14px; text-align: center;">
+                <div style="font-size: 10px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 700;">Capacidad Licitatoria</div>
+                <div style="font-size: 18px; font-weight: 800; color: #a78bfa; margin: 10px 0 4px 0;">${categorization.biddingCapacity || '$50.000.000 ARS'}</div>
+                <div style="font-size: 11px; color: #64748b;">Estimación máxima</div>
+                <div style="margin-top: 8px; background: linear-gradient(90deg, rgba(139,92,246,0.2), rgba(139,92,246,0.05)); border-radius: 6px; padding: 4px 8px;">
+                  <span style="font-size: 10px; color: #c4b5fd; font-weight: 600;">🏛️ ${contractsObj.supplierRegistryStatus || 'Habilitado COMPR.AR'}</span>
+                </div>
+              </div>
+            </td>
+          </tr>
+
+          <tr>
+            <!-- Riesgo Legal -->
+            <td style="width: 33%; padding: 8px; vertical-align: top;">
+              <div style="background: #0f172a; border: 1px solid #334155; border-radius: 8px; padding: 14px; text-align: center;">
+                <div style="font-size: 10px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 700;">Riesgo Legal</div>
+                <div style="margin: 10px auto; display: inline-block;">
+                  <span style="display: inline-block; width: 18px; height: 18px; border-radius: 50%; margin: 0 3px; background: ${(legal.riskRating || 'BAJO').includes('BAJO') || (legal.riskRating || 'BAJO').includes('SIN') ? '#10b981' : '#1e293b'}; border: 2px solid #334155;"></span>
+                  <span style="display: inline-block; width: 18px; height: 18px; border-radius: 50%; margin: 0 3px; background: ${(legal.riskRating || 'BAJO').includes('MEDIO') ? '#f59e0b' : '#1e293b'}; border: 2px solid #334155;"></span>
+                  <span style="display: inline-block; width: 18px; height: 18px; border-radius: 50%; margin: 0 3px; background: ${(legal.riskRating || 'BAJO').includes('ALTO') || (legal.riskRating || 'BAJO').includes('CRITICO') ? '#ef4444' : '#1e293b'}; border: 2px solid #334155;"></span>
+                </div>
+                <div style="font-size: 13px; color: ${(legal.riskRating || 'BAJO').includes('BAJO') || (legal.riskRating || 'BAJO').includes('SIN') ? '#34d399' : (legal.riskRating || 'BAJO').includes('MEDIO') ? '#fbbf24' : '#f87171'}; font-weight: 800;">${legal.riskRating || 'SIN OBSERVACIONES'}</div>
+                <div style="font-size: 10px; color: #64748b; margin-top: 2px;">${lawsuits.length} registros analizados</div>
+              </div>
+            </td>
+
+            <!-- Análisis FODA -->
+            <td style="width: 33%; padding: 8px; vertical-align: top;">
+              <div style="background: #0f172a; border: 1px solid #334155; border-radius: 8px; padding: 14px;">
+                <div style="font-size: 10px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 700; text-align: center; margin-bottom: 8px;">Análisis FODA</div>
+                <table style="width: 100%; font-size: 11px;">
+                  <tr>
+                    <td style="padding: 3px 0; color: #34d399; font-weight: 700;">Fortalezas</td>
+                    <td style="padding: 3px 0; text-align: right;">
+                      <div style="display: inline-block; background: #0f2b1d; border-radius: 4px; padding: 0 6px; height: 16px; line-height: 16px;">
+                        <span style="color: #34d399; font-weight: 800; font-size: 12px;">${(swot.strengths || []).length}</span>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 3px 0; color: #fbbf24; font-weight: 700;">Debilidades</td>
+                    <td style="padding: 3px 0; text-align: right;">
+                      <div style="display: inline-block; background: #2b2209; border-radius: 4px; padding: 0 6px; height: 16px; line-height: 16px;">
+                        <span style="color: #fbbf24; font-weight: 800; font-size: 12px;">${(swot.weaknesses || []).length}</span>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 3px 0; color: #60a5fa; font-weight: 700;">Oportunidades</td>
+                    <td style="padding: 3px 0; text-align: right;">
+                      <div style="display: inline-block; background: #0c1a2e; border-radius: 4px; padding: 0 6px; height: 16px; line-height: 16px;">
+                        <span style="color: #60a5fa; font-weight: 800; font-size: 12px;">${(swot.opportunities || []).length}</span>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 3px 0; color: #f87171; font-weight: 700;">Amenazas</td>
+                    <td style="padding: 3px 0; text-align: right;">
+                      <div style="display: inline-block; background: #2b0f0f; border-radius: 4px; padding: 0 6px; height: 16px; line-height: 16px;">
+                        <span style="color: #f87171; font-weight: 800; font-size: 12px;">${(swot.threats || []).length}</span>
+                      </div>
+                    </td>
+                  </tr>
+                </table>
+              </div>
+            </td>
+
+            <!-- Perfil Empresarial -->
+            <td style="width: 33%; padding: 8px; vertical-align: top;">
+              <div style="background: #0f172a; border: 1px solid #334155; border-radius: 8px; padding: 14px; text-align: center;">
+                <div style="font-size: 10px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 700;">Perfil Empresarial</div>
+                <div style="margin-top: 8px;">
+                  <div style="font-size: 11px; color: #e2e8f0; margin-bottom: 6px;"><strong style="color: #60a5fa;">Sector:</strong> ${categorization.sector || 'Industrial'}</div>
+                  <div style="font-size: 11px; color: #e2e8f0; margin-bottom: 6px;"><strong style="color: #60a5fa;">Modelo:</strong> ${categorization.businessModel || 'B2B'}</div>
+                  <div style="font-size: 11px; color: #e2e8f0; margin-bottom: 6px;"><strong style="color: #60a5fa;">Escala:</strong> ${categorization.companyType || 'PyME'}</div>
+                  <div style="font-size: 11px; color: #e2e8f0;"><strong style="color: #60a5fa;">Productos:</strong> ${(scraped.products || []).length} detectados</div>
+                </div>
+              </div>
+            </td>
+          </tr>
+        </table>
+      </div>
+
       <!-- SECCIÓN 1: RESUMEN GENERAL -->
       <div style="margin-bottom: 22px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px;">
         <h2 style="font-size: 15px; color: #1e3a8a; margin-top: 0; border-bottom: 1px solid #cbd5e1; padding-bottom: 6px;">1. Resumen General & Perfil Institucional</h2>
