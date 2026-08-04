@@ -102,7 +102,7 @@ export default function OsintChatbot({ currentReport }) {
           className="chatbot-trigger-btn"
           title="Abrir Tecnobot3F"
         >
-          <MessageSquare size={26} />
+          <Bot size={28} />
           <span style={{ position: 'absolute', top: '2px', right: '2px', width: '14px', height: '14px', borderRadius: '50%', background: '#10b981', border: '2px solid #0b0f17' }}></span>
         </button>
       )}
